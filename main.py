@@ -146,7 +146,7 @@ async def register_user(
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Database integrity error")
 
-    return {"msg": "User created successfully", "user": UserInDBSchema.from_orm(db_user)}
+    return templates.TemplateResponse("login.html", {"request": request, "user_info": user_info})
     
 @app.post("/post/login")
 async def login_user(
