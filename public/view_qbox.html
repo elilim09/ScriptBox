@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Post</title>
+    <script>
+        async function toggleLike(postId) {
+            try {
+                const response = await fetch(`/post/${postId}/like`, {
+                    method: 'POST',
+                    credentials: 'include',
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    alert(result.message);
+
+                    // Update button text
+                    const likeButton = document.getElementById('like-button');
+                    likeButton.textContent = result.status === 'success' ? 'Unlike' : 'Like';
+                    
+                    // Update like count
+                    const likeCountElement = document.getElementById('like-count');
+                    likeCountElement.textContent = result.like_count;
+                } else {
+                    const error = await response.json();
+                    alert(error.detail || 'An error occurred');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function deleteComment(commentId) {
+            if (confirm("Are you sure you want to delete this comment?")) {
+                try {
+                    const response = await fetch(`/comment/delete/${commentId}`, {
+                        method: 'POST',
+                        credentials: 'include',
+                    });
+
+                    if (response.ok) {
+                        alert("Comment deleted successfully");
+                        window.location.reload(); // Refresh the page to reflect the changes
+                    } else {
+                        const error = await response.json();
+                        alert(error.detail || 'An error occurred');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="post-container">
+        <h1>{{ post.title }}</h1>
+        <p>{{ post.content }}</p>
+        <p><strong>Author:</strong> {{ post.nickname }}</p>
+
+        {% if post.file_url %}
+            <p>
+                <strong>Open File:</strong>
+                <a href="{{ post.file_url }}" download target="_blank">Open</a>
+            </p>
+        {% endif %}
+
+        <p>Likes: <span id="like-count">{{ like_count }}</span></p>
+
+        <!-- Change button text based on user like status -->
+        <button id="like-button" onclick="toggleLike({{ post.id }})">
+            {% if user_info %}
+                {% if post_user_liked %}
+                    Unlike
+                {% else %}
+                    Like
+                {% endif %}
+            {% else %}
+                Like
+            {% endif %}
+        </button>
+
+        <!-- Display admin options if user is an admin -->
+        {% if is_admin or (user_info and post.nickname == user_info.nickname) %}
+            <div>
+                <a href="/post/edit/{{ post.id }}">Edit Post</a>
+                <form action="/post/delete/{{ post.id }}" method="post" style="display:inline;">
+                    <button type="submit">Delete Post</button>
+                </form>
+            </div>
+        {% endif %}
+
+        <h2>Comments</h2>
+        <ul>
+            {% for comment in comments %}
+                <li>
+                    <strong>{{ comment.nickname }}:</strong> {{ comment.content }}
+
+                    <!-- Display delete button if user is an admin or the comment author -->
+                    {% if is_admin or (user_info and comment.nickname == user_info.nickname) %}
+                        <button onclick="deleteComment({{ comment.id }})">Delete</button>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+
+        <!-- Comment form -->
+        {% if user_info %}
+            <form action="/post/comment" method="POST">
+                <input type="hidden" name="post_id" value="{{ post.id }}">
+                <textarea name="content" required placeholder="Add a comment..."></textarea>
+                <button type="submit">Submit</button>
+            </form>
+        {% else %}
+            <p>Please <a href="/login">log in</a> to comment.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Page</title>
+</head>
+<body>
+    <h1>My Page</h1>
+    
+    <h2>Update Profile</h2>
+    
+    <!-- Update Profile Form -->
+    <form action="/mypage/update_profile" method="post">
+        <div>
+            <label for="nickname">Nickname:</label>
+            <input type="text" id="nickname" name="nickname" value="{{ user.nickname }}" required>
+        </div>
+        <div>
+            <label for="current_password">Current Password:</label>
+            <input type="password" id="current_password" name="current_password" required>
+        </div>
+        <div>
+            <label for="new_password">New Password:</label>
+            <input type="password" id="new_password" name="new_password" required>
+        </div>
+        <div>
+            <label for="confirm_new_password">Confirm New Password:</label>
+            <input type="password" id="confirm_new_password" name="confirm_new_password" required>
+        </div>
+        <button type="submit">Update Profile</button>
+    </form>
+    
+    <a href="/">Back to Home</a>
+</body>
+</html>
