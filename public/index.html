@@ -109,6 +109,16 @@
         <h1>환영합니다, ScriptBox!</h1>
         <p>커뮤니티에 참여하여 코딩을 시작하세요.</p>
     </div>
+    <h2>1시 22분임</h2>
+    <ul>
+        {% for post, like_count in top_posts %}
+            <li>
+                <a href="/viewqbox/{{ post.id }}">{{ post.title }}</a>
+                <p>{{ post.nickname }}</p>
+                <p>Likes: {{ like_count }}</p>
+            </li>
+        {% endfor %}
+    </ul>
     <script>
         document.getElementById('logout-button').addEventListener('click', async () => {
             try {

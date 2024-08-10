@@ -14,6 +14,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.responses import JSONResponse
 from fastapi import File, UploadFile
 import dropbox
+from sqlalchemy.orm import aliased
 from dropbox.files import WriteMode
 ACCESS_TOKEN = 'sl.B6n5FnDqe92aq-KS2BKo7Fw0LWVUjBXXrQ2HX70BdpiqQUHGV3qHA_UuVwi97k7XdT46p6fTVSzurc4thGFM4bP5YjCI5c_X8Yrs6W0tGXNa9hiAOHCsvVRi_4m5J2aAvIeQ_HdeWUm-OsI'
 dbx = dropbox.Dropbox(ACCESS_TOKEN)
@@ -80,12 +81,34 @@ async def home(request: Request, db: Session = Depends(get_db)):
             user_info = {
                 "nickname": payload.get("nickname"),
                 "email": payload.get("sub"),
-                "admin": payload.get("admin")  # admin 정보를 가져옵니다.
+                "admin": payload.get("admin")
             }
         except JWTError:
             pass
-    print(user_info)
-    return templates.TemplateResponse("index.html", {"request": request, "user_info": user_info})
+
+    # Subquery to count likes per post
+    like_subquery = db.query(
+        LikeModel.post_id,
+        func.count(LikeModel.post_id).label("like_count")
+    ).group_by(LikeModel.post_id).subquery()
+
+    # Aliased models
+    post_alias = aliased(QboardPostModel)
+    like_alias = aliased(like_subquery)
+
+    # Query to get top 3 posts with most likes
+    top_posts_query = db.query(
+        post_alias,
+        like_alias.c.like_count
+    ).outerjoin(
+        like_alias, post_alias.id == like_alias.c.post_id
+    ).order_by(
+        like_alias.c.like_count.desc()
+    ).limit(3)
+
+    top_posts = top_posts_query.all()
+
+    return templates.TemplateResponse("index.html", {"request": request, "user_info": user_info, "top_posts": top_posts})
 
 
 @app.get("/login")
