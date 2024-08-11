@@ -7,118 +7,180 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            line-height: 1.6;
             margin: 0;
             padding: 0;
+            background-color: #f0f0f0;
+            line-height: 1.6;
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: #f4f4f4;
         }
 
-        /* 상단바 스타일 */
-        .navbar {
-            background-color: rgba(255, 255, 255, 0.8); /* 반투명한 하얀 배경 */
-            height: 60px; /* 높이 조정 */
-            width: 100%; /* 가로폭 */
-            position: fixed; /* 고정 위치 */
-            top: 0; /* 상단에 고정 */
-            left: 0; /* 왼쪽에 고정 */
-            z-index: 1000; /* 다른 요소 위에 표시 */
-            backdrop-filter: blur(15px); /* 뒤의 내용에 blur 효과 */
-            display: flex; /* 플렉스 박스 설정 */
-            justify-content: space-between; /* 좌우 정렬 */
-            align-items: center; /* 상하 정렬 */
-            padding: 0 20px; /* 좌우 여백 추가 */
-            box-shadow: 0 2px 5px rgba(0,0,0,0.15); /* 그림자 효과 */
-        }
-
-        /* 로고 이미지 스타일 */
-        .navbar .logo {
-            height: 40px; /* 로고 이미지 높이 */
-            width: auto; /* 로고 이미지 너비 자동 조정 */
-            margin-right: 10px; /* 오른쪽 여백 추가 */
-        }
-
-        header .container {
+        header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 10px 20px;
+            background-color: rgba(255, 255, 255, 0.8);
             width: 100%;
-            max-width: 1200px; /* 최대 너비 설정 */
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
         }
 
-        header a {
-            color: #333333; /* 링크 색상 */
-            text-decoration: none; /* 밑줄 없음 */
-            font-size: 16px; /* 폰트 크기 */
-        }
-
-        header ul {
-            list-style: none; /* 목록 스타일 없음 */
+        .logo {
             display: flex;
-            padding: 0;
-            margin: 0;
+            align-items: center;
+            font-size: 18px;
+            font-weight: bold;
         }
 
-        header li {
-            margin-right: 20px; /* 리스트 간격 */
+        .logo img {
+            width: 30px;
+            margin-right: 10px;
+        }
+
+        nav ul {
+            display: flex;
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        nav ul li {
+            margin-left: 20px;
+            cursor: pointer;
+        }
+
+        nav a {
+            color: #333;
+            text-decoration: none;
         }
 
         .main-content {
-            margin-top: 100px; /* 상단바 아래에 내용 표시 */
+            margin-top: 100px;
             padding: 20px;
             width: 100%;
-            max-width: 960px; /* 최대 너비 설정 */
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1); /* 박스 그림자 */
-            background-color: #fff; /* 배경색 */
-            border-radius: 8px; /* 둥근 모서리 */
+            max-width: 960px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            border-radius: 8px;
         }
 
-        h1 {
-            color: #333; /* 제목 색상 */
+        .banner {
+            background-color: #3a3f5c;
+            color: white;
+            padding: 40px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .banner img {
+            width: 100px;
+            margin-right: 20px;
+        }
+
+        .banner h1 {
+            font-size: 36px;
+            margin: 0;
+        }
+
+        .content {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+        }
+
+        .column {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            width: 45%;
+        }
+
+        .column h2 {
+            margin-top: 0;
+        }
+
+        .column ul {
+            padding-left: 20px;
+        }
+
+        .add-button {
+            background-color: #7c4dff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .add-button:hover {
+            background-color: #6200ea;
         }
     </style>
 </head>
 <body>
     <header class="navbar">
-        <div class="container">
-            <div id="branding">
-                <img src="ScriptBox_아이콘.png" alt="ScriptBox Logo" class="logo"> <!-- 로고 이미지 -->
-                <h1>ScriptBox</h1>
-            </div>
-            <nav>
-                <ul>
-                    <li><a href="/index">홈</a></li>
-                    <li><a href="/qbox">게시판</a></li>
-                    {% if user_info %}
-                        <li><button id="logout-button" style="background: none; border: none; color: #000000; cursor: pointer;">로그아웃</button></li>
-                        <li><a href="/mypage">내 정보</a></li>
-                        {% if user_info.admin == 1 %}
-                            <li><a href="/admin" class="button">관리자 페이지</a></li>
-                        {% endif %}
-                    {% else %}
-                        <li><a href="/login">로그인</a></li>
-                        <li><a href="/register">회원가입</a></li>
-                    {% endif %}
-                </ul>
-            </nav>
+        <div class="logo">
+            <img src="box-icon.png" alt="ScriptBox 로고">
+            ScriptBox
         </div>
+        <nav>
+            <ul>
+                <li><a href="/index">홈</a></li>
+                <li><a href="/qbox">게시판</a></li>
+                {% if user_info %}
+                    <li><button id="logout-button" style="background: none; border: none; color: #000000; cursor: pointer;">로그아웃</button></li>
+                    <li><a href="/mypage">내 정보</a></li>
+                    {% if user_info.admin == 1 %}
+                        <li><a href="/admin" class="button">관리자 페이지</a></li>
+                    {% endif %}
+                {% else %}
+                    <li><a href="/login">로그인</a></li>
+                    <li><a href="/register">회원가입</a></li>
+                {% endif %}
+            </ul>
+        </nav>
     </header>
-    <div class="main-content">
-        <h1>환영합니다, ScriptBox!</h1>
-        <p>커뮤니티에 참여하여 코딩을 시작하세요.</p>
-    </div>
-    <h2>1시 22분임</h2>
-    <ul>
-        {% for post, like_count in top_posts %}
-            <li>
-                <a href="/viewqbox/{{ post.id }}">{{ post.title }}</a>
-                <p>{{ post.nickname }}</p>
-                <p>Likes: {{ like_count }}</p>
-            </li>
-        {% endfor %}
-    </ul>
+
+    <main>
+
+        <div class="main-content">
+            <h1>환영합니다, ScriptBox!</h1>
+            <p>커뮤니티에 참여하여 코딩을 시작하세요.</p>
+        </div>
+
+        <section class="content">
+            <div class="column">
+                <h2>인기작품</h2>
+                <ul>
+                    <li>[언어] 인기작품제목1</li>
+                </ul>
+                <button class="add-button">+ 내 작품만들기</button>
+            </div>
+            <div class="column">
+                <h2>Q. Box</h2>
+                <ul>
+                    {% for post, like_count in top_posts %}
+                        <li>
+                            <a href="/viewqbox/{{ post.id }}">{{ post.title }}</a>
+                            <p>{{ post.nickname }}</p>
+                            <p>Likes: {{ like_count }}</p>
+                        </li>
+                    {% endfor %}
+                </ul>
+                <button class="add-button">+ 질문 등록하기</button>
+            </div>
+        </section>
+    </main>
+
     <script>
         document.getElementById('logout-button').addEventListener('click', async () => {
             try {
