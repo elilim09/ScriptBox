@@ -226,10 +226,15 @@ async def code_ai(code: str = Form(...)):
         
         # GenerateContentResponse 객체에서 JSON 데이터 추출
         try:
-            # response.result.candidates[0].content.parts[0].text 에서 JSON 추출
+            # response.result.candidates[0].content.parts[0].text에서 JSON 추출
             response_text = response.result.candidates[0].content.parts[0].text
-            response_json = json.loads(response_text)
 
+            # JSON 데이터가 코드 블록 안에 있으므로, '```json\n'과 '```'를 제거해야 할 수 있음
+            if response_text.startswith("```json\n") and response_text.endswith("```"):
+                response_text = response_text[8:-3].strip()
+
+            response_json = json.loads(response_text)
+            
             # 필요한 데이터 추출
             code_result = response_json.get('code', '코드 정보 없음')
             interpretation_result = response_json.get('interpretation', '해석 정보 없음')
@@ -247,7 +252,8 @@ async def code_ai(code: str = Form(...)):
 
     except Exception as e:
         # 예외 발생 시 HTTP 500 에러 반환
-        raise HTTPException(status_code=500, detail="코드 분석 중 오류가 발생했습니다. 다시 시도해 주세요.")
+        raise HTTPException(status_code=500, detail=f"코드 분석 중 오류가 발생했습니다: {str(e)}")
+        
 @app.get("/code")
 def qbox_create(request: Request):
     return templates.TemplateResponse("Code.html", {"request": request})
