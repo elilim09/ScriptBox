@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScriptBox - 코드 해석기</title>
+    <title>ScriptBox : 코드 해석기</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -130,15 +130,33 @@
     </main>
 
     <script>
-        function analyzeCode() {
+        async function analyzeCode() {
             const code = document.querySelector('.code-input').value;
-            
-            // 여기서 실제로는 서버로 코드를 보내 분석을 수행해야 합니다.
-            // 이 예제에서는 간단한 시뮬레이션만 수행합니다.
 
-            document.getElementById('language-result').textContent = "JavaScript";
-            document.getElementById('interpretation-result').textContent = "이 코드는 간단한 함수를 정의하고 있습니다. 함수는 두 개의 숫자를 인자로 받아 더한 결과를 반환합니다.";
-            document.getElementById('error-advice-result').textContent = "코드에 명백한 오류는 보이지 않습니다. 다만, 입력값에 대한 유효성 검사를 추가하면 더 견고한 코드가 될 것 같습니다.";
+            try {
+                const response = await fetch('/analyze_code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        'code': code
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('서버 응답이 올바르지 않습니다.');
+                }
+
+                const data = await response.json();
+                document.getElementById('language-result').textContent = data.language;
+                document.getElementById('interpretation-result').textContent = data.interpretation;
+                document.getElementById('error-advice-result').textContent = data.error_advice;
+
+            } catch (error) {
+                console.error('코드 분석 중 오류가 발생했습니다:', error);
+                alert('코드 분석 중 오류가 발생했습니다. 다시 시도해 주세요.');
+            }
         }
     </script>
 </body>
