@@ -1,35 +1,32 @@
-from fastapi import FastAPI, Request, Form, HTTPException, Depends
-from fastapi.responses import JSONResponse
-from fastapi.templating import Jinja2Templates
-from sqlalchemy import create_engine, func
+from fastapi import FastAPI, Depends, HTTPException, status, Request, Form, Response
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from sqlalchemy import create_engine, Column, Integer, String, Text, TIMESTAMP, func
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
-from google.generativeai import GenerativeModel
-from jose import JWTError, jwt
-from models import Base, UserModel, QboardPostModel, QboardCommentModel, LikeModel
-from schemas import UserCreateSchema
 from passlib.context import CryptContext
+from jose import JWTError, jwt
 from datetime import datetime, timedelta
-from sqlalchemy.exc import IntegrityError
-import os
+from typing import Optional, List
+from fastapi.templating import Jinja2Templates
+from models import Base, UserModel, QboardPostModel, QboardCommentModel, LikeModel  # 모델을 가져옵니다
+from schemas import UserCreateSchema, UserInDBSchema, QboardPostSchema, QboardCommentSchema, QboardPostDetailSchema
+from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse
+from fastapi import File, UploadFile
+import dropbox
+from sqlalchemy.orm import aliased
+from dropbox.files import WriteMode
+import google.generativeai as genai
 
-# 앱 초기화 및 설정
-app = FastAPI()
+GOOGLE_API_KEY = "AIzaSyB6wTmPTcrjjnnC_tuotbLZo3dSEogXJ8k"
+genai.configure(api_key=GOOGLE_API_KEY)
+model = genai.GenerativeModel('gemini-pro')
 
-# Google AI Python SDK 설정
-os.environ["AIzaSyB6wTmPTcrjjnnC_tuotbLZo3dSEogXJ8k"] = "path/to/your/service-account.json"  # 서비스 계정 JSON 파일 경로
-genai = GenerativeModel(
-    model_name="gemini-1.5-flash",
-    generation_config={
-        "temperature": 0.5,
-        "top_p": 0.95,
-        "top_k": 64,
-        "max_output_tokens": 1024,
-        "response_mime_type": "text/plain",
-    }
-)
+ACCESS_TOKEN = 'sl.B6n5FnDqe92aq-KS2BKo7Fw0LWVUjBXXrQ2HX70BdpiqQUHGV3qHA_UuVwi97k7XdT46p6fTVSzurc4thGFM4bP5YjCI5c_X8Yrs6W0tGXNa9hiAOHCsvVRi_4m5J2aAvIeQ_HdeWUm-OsI'
+dbx = dropbox.Dropbox(ACCESS_TOKEN)
 
 # 데이터베이스 설정
-SQLALCHEMY_DATABASE_URL = "mysql://root:password@host:port/dbname"  # DB 연결 문자열
+SQLALCHEMY_DATABASE_URL = "mysql://root:qwaszx77^^@svc.sel4.cloudtype.app:31994/hackton"
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base.metadata.create_all(bind=engine)
@@ -38,11 +35,12 @@ Base.metadata.create_all(bind=engine)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # JWT 설정
-SECRET_KEY = "your_secret_key"
+SECRET_KEY = "my_fixed_secret_key"  # 고정된 비밀 키
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-# 템플릿 설정
+# FastAPI 앱 및 Jinja2Templates 설정
+app = FastAPI()
 templates = Jinja2Templates(directory="public")
 
 # 데이터베이스 세션 의존성
@@ -53,7 +51,14 @@ def get_db():
     finally:
         db.close()
 
-# 비밀번호 해시 함수
+def toggle_like(db: Session, post_id: int, user_id: int):
+    like = db.query(models.LikeModel).filter_by(post_id=post_id, user_id=user_id).first()
+    if like:
+        db.delete(like)
+    else:
+        new_like = models.LikeModel(user_id=user_id, post_id=post_id)
+        db.add(new_like)
+    db.commit()
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
@@ -70,34 +75,8 @@ def create_access_token(data: dict, expires_delta: timedelta = None) -> str:
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-# 코드 분석 엔드포인트
-@app.post("/analyze_code")
-async def analyze_code(code: str = Form(...)):
-    try:
-        # 코드 언어 판독
-        language_response = genai.start_chat(history=[
-            {"role": "user", "parts": [code]}
-        ]).send_message("이 코드는 어떤 언어로 작성되었나요?")
-        
-        # 코드 해석
-        interpretation_response = genai.start_chat(history=[
-            {"role": "user", "parts": [code]}
-        ]).send_message("이 코드를 한국어로 설명해줘.")
-
-        # 코드 오류 조언
-        error_advice_response = genai.start_chat(history=[
-            {"role": "user", "parts": [code]}
-        ]).send_message("이 코드의 오류를 알려줘.")
-
-        return JSONResponse({
-            "language": language_response.text.strip(),
-            "interpretation": interpretation_response.text.strip(),
-            "error_advice": error_advice_response.text.strip()
-        })
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
 @app.get("/")
+@app.get("/index")
 async def home(request: Request, db: Session = Depends(get_db)):
     access_token = request.cookies.get("access_token")
     user_info = None
@@ -119,14 +98,18 @@ async def home(request: Request, db: Session = Depends(get_db)):
         func.count(LikeModel.post_id).label("like_count")
     ).group_by(LikeModel.post_id).subquery()
 
+    # Aliased models
+    post_alias = aliased(QboardPostModel)
+    like_alias = aliased(like_subquery)
+
     # Query to get top 3 posts with most likes
     top_posts_query = db.query(
-        QboardPostModel,
-        like_subquery.c.like_count
+        post_alias,
+        like_alias.c.like_count
     ).outerjoin(
-        like_subquery, QboardPostModel.id == like_subquery.c.post_id
+        like_alias, post_alias.id == like_alias.c.post_id
     ).order_by(
-        like_subquery.c.like_count.desc()
+        like_alias.c.like_count.desc()
     ).limit(3)
 
     top_posts = top_posts_query.all()
@@ -228,17 +211,16 @@ async def login_user(
     )
 
     return {"msg": "Login successful"}
-
 @app.post("/post/logout")
 async def logout(response: Response):
     # Clear the access token cookie
     response.delete_cookie("access_token")
     return {"msg": "Logout successful"}
-
+@app.post("/analyze_code")
+async def code_ai(response: Response):
 @app.get("/code")
 def qbox_create(request: Request):
     return templates.TemplateResponse("Code.html", {"request": request})
-
 @app.get("/qbox_create")
 def qbox_create(request: Request):
     return templates.TemplateResponse("qbox_create.html", {"request": request})
@@ -260,7 +242,6 @@ async def qbox(request: Request, db: Session = Depends(get_db)):
     posts = db.query(QboardPostModel).order_by(QboardPostModel.created_at.desc()).all()
 
     return templates.TemplateResponse("Qbox.html", {"request": request, "posts": posts, "user_info": user_info})
-
 @app.post("/post/create_qbox")
 async def create_qbox_post(
     request: Request,
@@ -328,7 +309,6 @@ async def create_qbox_post(
             raise HTTPException(status_code=500, detail=f"File upload failed: {str(e)}")
 
     return RedirectResponse(url="/qbox", status_code=303)
-
 @app.get("/viewqbox/{post_id}")
 async def view_qbox(post_id: int, request: Request, db: Session = Depends(get_db)):
     # 로그인 상태 확인
@@ -451,7 +431,6 @@ async def like_post(post_id: int, request: Request, db: Session = Depends(get_db
     like_count = db.query(func.count(LikeModel.post_id)).filter(LikeModel.post_id == post_id).scalar() or 0
 
     return {"status": status, "message": message, "like_count": like_count}
-
 @app.get("/post/edit/{post_id}")
 async def edit_post(post_id: int, request: Request, db: Session = Depends(get_db)):
     access_token = request.cookies.get("access_token")
@@ -520,6 +499,8 @@ async def update_post(
 
     return RedirectResponse(url=f"/viewqbox/{post_id}", status_code=status.HTTP_303_SEE_OTHER)
 
+
+
 @app.post("/post/delete/{post_id}")
 def delete_post(post_id: int, db: Session = Depends(get_db)):
     # Delete comments associated with the post
@@ -534,7 +515,6 @@ def delete_post(post_id: int, db: Session = Depends(get_db)):
     db.commit()
     
     return templates.TemplateResponse("Qbox.html", {"request": request})
-
 @app.post("/comment/delete/{comment_id}")
 async def delete_comment(comment_id: int, request: Request, db: Session = Depends(get_db)):
     # 로그인 상태 확인
@@ -564,7 +544,6 @@ async def delete_comment(comment_id: int, request: Request, db: Session = Depend
         return {"message": "Comment deleted successfully"}
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-
 @app.get("/admin")
 async def get_all_users(request: Request, db: Session = Depends(get_db)):
     # Check if the user is authenticated
@@ -634,7 +613,7 @@ async def reset_password(
 
 @app.post("/admin/set_admin/{user_id}")
 async def set_admin(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(UserModel).filter(UserModel.id == user_id).first()
+    user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
@@ -673,6 +652,7 @@ async def update_profile(
     current_password: str = Form(...),
     new_password: str = Form(...),
     confirm_new_password: str = Form(...),
+    
     db: Session = Depends(get_db)
 ):
     # 현재 로그인한 사용자의 정보 가져오기
@@ -682,6 +662,7 @@ async def update_profile(
 
     current_user = get_current_user(db, access_token)
     
+
     # 비밀번호 확인
     if not verify_password(current_password, current_user.password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Current password is incorrect")
@@ -703,6 +684,13 @@ async def update_profile(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to update profile")
 
     return RedirectResponse(url="/mypage", status_code=status.HTTP_302_FOUND)
+
+
+# 비밀번호 해시 함수 예제 (실제 구현 시 보안 강화 필요)
+def hash_password(password: str) -> str:
+    # 실제 비밀번호 해싱 알고리즘을 사용해야 합니다.
+    import hashlib
+    return hashlib.sha256(password.encode()).hexdigest()
 
 def get_current_user(db: Session, access_token: str) -> UserModel:
     try:
