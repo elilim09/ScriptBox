@@ -220,40 +220,25 @@ async def logout(response: Response):
 @app.post("/analyze_code")
 async def code_ai(code: str = Form(...)):
     try:
-        # 코드 분석 요청
-        prompt = f"{code} 이 코드에 대해서 한국어로 사용된 코드 해석 오류 수정 및 조언을 json 형태(각각 code, interpretation, error_advice)로 보내"
-        response = model.generate_content(prompt)
+        prompts = [
+            (f"{code} 이 코드는 어떤 프로그래밍 언어를 사용했어?", 'language'),
+            (f"{code} 이 코드는 간단하게 해석해줘", 'interpretation'),
+            (f"{code} 이 코드에 에러나 보완할 점 있어?", 'error_advice')
+        ]
         
-        # GenerateContentResponse 객체에서 JSON 데이터 추출
-        try:
-            # response.result.candidates[0].content.parts[0].text에서 JSON 추출
-            response_text = response.result.candidates[0].content.parts[0].text
-
-            # JSON 데이터가 코드 블록 안에 있으므로, '```json\n'과 '```'를 제거해야 할 수 있음
-            if response_text.startswith("```json\n") and response_text.endswith("```"):
-                response_text = response_text[8:-3].strip()
-
-            response_json = json.loads(response_text)
-            
-            # 필요한 데이터 추출
-            code_result = response_json.get('code', '코드 정보 없음')
-            interpretation_result = response_json.get('interpretation', '해석 정보 없음')
-            error_advice_result = response_json.get('error_advice', '오류 수정 조언 없음')
-            
-            # 결과를 JSON 형태로 반환
-            return {
-                "code": code_result,
-                "interpretation": interpretation_result,
-                "error_advice": error_advice_result
-            }
-        except json.JSONDecodeError:
-            # JSON 파싱 오류 처리
-            raise HTTPException(status_code=500, detail="응답 형식 오류")
+        responses = {}
+        
+        for prompt, key in prompts:
+            response = model.generate_content(prompt)
+            # 응답에서 텍스트 추출
+            response_text = response.result.candidates[0].content.parts[0].text.strip()
+            responses[key] = response_text
+        
+        return responses
 
     except Exception as e:
-        # 예외 발생 시 HTTP 500 에러 반환
-        raise HTTPException(status_code=500, detail=f"코드 분석 중 오류가 발생했습니다: {str(e)}")
-        
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/code")
 def qbox_create(request: Request):
     return templates.TemplateResponse("Code.html", {"request": request})
