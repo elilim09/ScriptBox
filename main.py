@@ -210,7 +210,9 @@ async def logout(response: Response):
     # Clear the access token cookie
     response.delete_cookie("access_token")
     return {"msg": "Logout successful"}
-
+@app.get("/code")
+def qbox_create(request: Request):
+    return templates.TemplateResponse("Code.html", {"request": request})
 @app.get("/qbox_create")
 def qbox_create(request: Request):
     return templates.TemplateResponse("qbox_create.html", {"request": request})
