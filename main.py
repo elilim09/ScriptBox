@@ -17,6 +17,7 @@ import dropbox
 from sqlalchemy.orm import aliased
 from dropbox.files import WriteMode
 import google.generativeai as genai
+import json
 
 GOOGLE_API_KEY = "AIzaSyB6wTmPTcrjjnnC_tuotbLZo3dSEogXJ8k"
 genai.configure(api_key=GOOGLE_API_KEY)
@@ -217,7 +218,36 @@ async def logout(response: Response):
     response.delete_cookie("access_token")
     return {"msg": "Logout successful"}
 @app.post("/analyze_code")
-async def code_ai(response: Response):
+async def code_ai(code: str = Form(...)):
+    try:
+        # 코드 분석 요청
+        prompt = f"{code} 이 코드에 대해서 한국어로 사용된 코드 해석 오류 수정 및 조언을 json 형태(각각 code, interpretation, error_advice)로 보내"
+        response = model.generate_content(prompt)
+        
+        # GenerateContentResponse 객체에서 JSON 데이터 추출
+        try:
+            # response.result.candidates[0].content.parts[0].text 에서 JSON 추출
+            response_text = response.result.candidates[0].content.parts[0].text
+            response_json = json.loads(response_text)
+
+            # 필요한 데이터 추출
+            code_result = response_json.get('code', '코드 정보 없음')
+            interpretation_result = response_json.get('interpretation', '해석 정보 없음')
+            error_advice_result = response_json.get('error_advice', '오류 수정 조언 없음')
+            
+            # 결과를 JSON 형태로 반환
+            return {
+                "code": code_result,
+                "interpretation": interpretation_result,
+                "error_advice": error_advice_result
+            }
+        except json.JSONDecodeError:
+            # JSON 파싱 오류 처리
+            raise HTTPException(status_code=500, detail="응답 형식 오류")
+
+    except Exception as e:
+        # 예외 발생 시 HTTP 500 에러 반환
+        raise HTTPException(status_code=500, detail="코드 분석 중 오류가 발생했습니다. 다시 시도해 주세요.")
 @app.get("/code")
 def qbox_create(request: Request):
     return templates.TemplateResponse("Code.html", {"request": request})

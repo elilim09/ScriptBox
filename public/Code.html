@@ -111,27 +111,32 @@
 
     <main class="main-content">
         <h1>코드 분석</h1>
-        <textarea class="code-input" placeholder="여기에 코드를 입력하세요..."></textarea>
-        <button class="analyze-button" onclick="analyzeCode()">코드 분석하기</button>
+        <form id="code-form">
+            <textarea class="code-input" name="code" placeholder="여기에 코드를 입력하세요..."></textarea>
+            <button type="submit" class="analyze-button">코드 분석하기</button>
+        </form>
 
         <div class="result-section">
             <h2>분석 결과</h2>
             <div class="result-content">
                 <h3>사용된 언어</h3>
-                <p id="language-result"></p>
+                <p id="language-result">결과 없음</p>
 
                 <h3>코드 해석</h3>
-                <p id="interpretation-result"></p>
+                <p id="interpretation-result">결과 없음</p>
 
                 <h3>오류 수정 조언</h3>
-                <p id="error-advice-result"></p>
+                <p id="error-advice-result">결과 없음</p>
             </div>
         </div>
     </main>
 
     <script>
-        async function analyzeCode() {
-            const code = document.querySelector('.code-input').value;
+        document.getElementById('code-form').addEventListener('submit', async (event) => {
+            event.preventDefault(); // 폼 제출을 방지
+
+            const formData = new FormData(event.target);
+            const code = formData.get('code');
 
             try {
                 const response = await fetch('/analyze_code', {
@@ -149,15 +154,15 @@
                 }
 
                 const data = await response.json();
-                document.getElementById('language-result').textContent = data.language;
-                document.getElementById('interpretation-result').textContent = data.interpretation;
-                document.getElementById('error-advice-result').textContent = data.error_advice;
+                document.getElementById('language-result').textContent = data.code || '결과 없음';
+                document.getElementById('interpretation-result').textContent = data.interpretation || '결과 없음';
+                document.getElementById('error-advice-result').textContent = data.error_advice || '결과 없음';
 
             } catch (error) {
                 console.error('코드 분석 중 오류가 발생했습니다:', error);
                 alert('코드 분석 중 오류가 발생했습니다. 다시 시도해 주세요.');
             }
-        }
+        });
     </script>
 </body>
 </html>
