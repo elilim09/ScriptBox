@@ -219,25 +219,22 @@ async def logout(response: Response):
     return {"msg": "Logout successful"}
 @app.post("/analyze_code")
 async def code_ai(code: str = Form(...)):
-    try:
-        prompts = [
-            (f"{code} 이 코드는 어떤 프로그래밍 언어를 사용했어?", 'language'),
-            (f"{code} 이 코드는 간단하게 해석해줘", 'interpretation'),
-            (f"{code} 이 코드에 에러나 보완할 점 있어?", 'error_advice')
-        ]
+    prompts = [
+        (f"{code} 이 코드는 어떤 프로그래밍 언어를 사용했어?", 'language'),
+        (f"{code} 이 코드는 간단하게 해석해줘", 'interpretation'),
+        (f"{code} 이 코드에 에러나 보완할 점 있어?", 'error_advice')
+    ]
         
-        responses = {}
+    responses = {}
         
-        for prompt, key in prompts:
-            response = model.generate_content(prompt)
+    for prompt, key in prompts:
+        response = model.generate_content(prompt)
             # 응답에서 텍스트 추출
-            response_text = response.result.candidates[0].content.parts[0].text.strip()
-            responses[key] = response_text
-        
-        return responses
+        response_text = response._result.candidates[0].content.parts[0].text.strip()
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        responses[key] = response_text
+    print(responses)
+    return responses
 
 @app.get("/code")
 def qbox_create(request: Request):
