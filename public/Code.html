@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScriptBox - 코드 해석기</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #7c4dff;
+            --secondary-color: #3a3f5c;
+            --background-color: #f5f7fa;
+            --text-color: #333;
+            --light-text-color: #666;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            line-height: 1.6;
+            color: var(--text-color);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 5%;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            width: 90%;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .logo img {
+            width: 40px;
+            margin-right: 10px;
+        }
+
+        .main-content {
+            margin-top: 80px;
+            padding: 40px 5%;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .code-input {
+            width: 100%;
+            height: 200px;
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+
+        .analyze-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        .analyze-button:hover {
+            background-color: #6200ea;
+        }
+
+        .result-section {
+            margin-top: 30px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-section h2 {
+            color: var(--primary-color);
+            margin-top: 0;
+        }
+
+        .result-content {
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="/public/images/ScriptBox_로고.png" alt="ScriptBox 로고">
+            ScriptBox
+        </div>
+    </header>
+
+    <main class="main-content">
+        <h1>코드 분석</h1>
+        <textarea class="code-input" placeholder="여기에 코드를 입력하세요..."></textarea>
+        <button class="analyze-button" onclick="analyzeCode()">코드 분석하기</button>
+
+        <div class="result-section">
+            <h2>분석 결과</h2>
+            <div class="result-content">
+                <h3>사용된 언어</h3>
+                <p id="language-result"></p>
+
+                <h3>코드 해석</h3>
+                <p id="interpretation-result"></p>
+
+                <h3>오류 수정 조언</h3>
+                <p id="error-advice-result"></p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function analyzeCode() {
+            const code = document.querySelector('.code-input').value;
+            
+            // 여기서 실제로는 서버로 코드를 보내 분석을 수행해야 합니다.
+            // 이 예제에서는 간단한 시뮬레이션만 수행합니다.
+
+            document.getElementById('language-result').textContent = "JavaScript";
+            document.getElementById('interpretation-result').textContent = "이 코드는 간단한 함수를 정의하고 있습니다. 함수는 두 개의 숫자를 인자로 받아 더한 결과를 반환합니다.";
+            document.getElementById('error-advice-result').textContent = "코드에 명백한 오류는 보이지 않습니다. 다만, 입력값에 대한 유효성 검사를 추가하면 더 견고한 코드가 될 것 같습니다.";
+        }
+    </script>
+</body>
+</html>
