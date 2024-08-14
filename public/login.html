@@ -1,35 +1,202 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-    <title>Login : ScriptBox</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome Back! : ScriptBox</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #7c4dff;
+            --secondary-color: #3a3f5c;
+            --background-color: #f5f7fa;
+            --text-color: #333;
+            --light-text-color: #666;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            line-height: 1.6;
+            color: var(--text-color);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 5%;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            width: 90%;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .logo img {
+            width: 40px;
+            margin-right: 10px;
+        }
+
+        nav ul {
+            display: flex;
+            flex-wrap: wrap;
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        nav ul li {
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+
+        nav a, nav button {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            font-size: 16px;
+        }
+
+        nav a:hover, nav button:hover {
+            color: var(--primary-color);
+        }
+
+        .main-content {
+            margin-top: 120px;
+            padding: 40px 5%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .login-form {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .login-form h1 {
+            margin-top: 0;
+            color: var(--primary-color);
+            font-size: 24px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--light-text-color);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .submit-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+
+        .submit-button:hover {
+            background-color: #6200ea;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="https://i.ibb.co/vBYZZwr/Script-Box.png" alt="ScriptBox 로고" style="width: 100px;">
+        </div>
+        <nav>
+            <ul>
+                <li><a href="/index">홈</a></li>
+                <li><a href="/qbox">게시판</a></li>
+                {% if user_info %}
+                    <li><button id="logout-button">로그아웃</button></li>
+                    <li><a href="/mypage">내 정보</a></li>
+                    {% if user_info.admin == 1 %}
+                        <li><a href="/admin">관리자</a></li>
+                    {% endif %}
+                {% else %}
+                    <li><a href="/login">로그인</a></li>
+                    <li><a href="/register">회원가입</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <div class="login-form">
+            <h1>로그인</h1>
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="username">아이디 (이메일 또는 닉네임)</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">비밀번호</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="submit-button">로그인</button>
+            </form>
+        </div>
+    </main>
+
     <script>
         async function handleLogin(event) {
             event.preventDefault();
             const formData = new FormData(event.target);
-            const response = await fetch('/post/login', {
-                method: 'POST',
-                body: formData
-            });
+            try {
+                const response = await fetch('/post/login', {
+                    method: 'POST',
+                    body: formData
+                });
 
-            if (response.ok) {
-                window.location.href = '/index'; // Redirect to index page
-            } else {
-                const error = await response.json();
-                alert(error.detail); // Show error message
+                if (response.ok) {
+                    window.location.href = '/index'; // 인덱스 페이지로 리다이렉트
+                } else {
+                    const error = await response.json();
+                    alert(error.detail); // 에러 메시지 표시
+                }
+            } catch (error) {
+                console.error('로그인 중 오류 발생:', error);
+                alert('로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
             }
         }
     </script>
-</head>
-<body>
-    <h1>Login</h1>
-    <form onsubmit="handleLogin(event)">
-        <label for="username">Username (Email or Nickname):</label>
-        <input type="text" id="username" name="username" required>
-        <br>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required>
-        <br>
-        <button type="submit">Login</button>
-    </form>
 </body>
 </html>

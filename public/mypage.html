@@ -3,34 +3,232 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Page</title>
+    <title>My Page : ScriptBox</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #7c4dff;
+            --secondary-color: #3a3f5c;
+            --background-color: #f5f7fa;
+            --text-color: #333;
+            --light-text-color: #666;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            line-height: 1.6;
+            color: var(--text-color);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 5%;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            width: 90%;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .logo img {
+            width: 40px;
+            margin-right: 10px;
+        }
+
+        nav ul {
+            display: flex;
+            flex-wrap: wrap;
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        nav ul li {
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+
+        nav a, nav button {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            font-size: 16px;
+        }
+
+        nav a:hover, nav button:hover {
+            color: var(--primary-color);
+        }
+
+        .main-content {
+            margin-top: 120px;
+            padding: 40px 5%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .profile-form {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-form h1 {
+            margin-top: 0;
+            color: var(--primary-color);
+            font-size: 28px;
+            text-align: center;
+        }
+
+        .profile-form h2 {
+            color: var(--secondary-color);
+            font-size: 22px;
+            margin-top: 30px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--light-text-color);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .update-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .update-button:hover {
+            background-color: #6200ea;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-    <h1>My Page</h1>
-    
-    <h2>Update Profile</h2>
-    
-    <!-- Update Profile Form -->
-    <form action="/mypage/update_profile" method="post">
-        <div>
-            <label for="nickname">Nickname:</label>
-            <input type="text" id="nickname" name="nickname" value="{{ user.nickname }}" required>
+    <header>
+        <div class="logo">
+            <img src="https://i.ibb.co/vBYZZwr/Script-Box.png" alt="ScriptBox 로고" style="width: 100px;">
         </div>
-        <div>
-            <label for="current_password">Current Password:</label>
-            <input type="password" id="current_password" name="current_password" required>
+        <nav>
+            <ul>
+                <li><a href="/index">홈</a></li>
+                <li><a href="/qbox">게시판</a></li>
+                {% if user_info %}
+                    <li><button id="logout-button">로그아웃</button></li>
+                    <li><a href="/mypage">내 정보</a></li>
+                    {% if user_info.admin == 1 %}
+                        <li><a href="/admin">관리자</a></li>
+                    {% endif %}
+                {% else %}
+                    <li><a href="/login">로그인</a></li>
+                    <li><a href="/register">회원가입</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <div class="profile-form">
+            <h1>My Page</h1>
+            <h2>프로필 업데이트</h2>
+            <form action="/mypage/update_profile" method="post">
+                <div class="form-group">
+                    <label for="nickname">닉네임:</label>
+                    <input type="text" id="nickname" name="nickname" value="{{ user.nickname }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="current-password">현재 비밀번호:</label>
+                    <input type="password" id="current-password" name="current-password" required>
+                </div>
+                <div class="form-group">
+                    <label for="new-password">새 비밀번호:</label>
+                    <input type="password" id="new-password" name="new-password">
+                </div>
+                <div class="form-group">
+                    <label for="confirm-password">새 비밀번호 확인:</label>
+                    <input type="password" id="confirm-password" name="confirm_new_password">
+                </div>
+                <button type="submit" class="update-button">프로필 업데이트</button>
+            </form>
+            <a href="/index" class="back-link">홈으로 돌아가기</a>
         </div>
-        <div>
-            <label for="new_password">New Password:</label>
-            <input type="password" id="new_password" name="new_password" required>
-        </div>
-        <div>
-            <label for="confirm_new_password">Confirm New Password:</label>
-            <input type="password" id="confirm_new_password" name="confirm_new_password" required>
-        </div>
-        <button type="submit">Update Profile</button>
-    </form>
-    
-    <a href="/">Back to Home</a>
+    </main>
+
+    <script>
+        async function updateProfile(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch('/mypage/update_profile', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    alert('프로필이 성공적으로 업데이트되었습니다.');
+                    window.location.href = '/mypage';
+                } else {
+                    const errorData = await response.json();
+                    alert(`프로필 업데이트 실패: ${errorData.detail}`);
+                }
+            } catch (error) {
+                alert('프로필 업데이트 중 오류가 발생했습니다.');
+            }
+        }
+    </script>
 </body>
 </html>
