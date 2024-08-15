@@ -4,129 +4,173 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>새 게시물 작성 : ScriptBox</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #7c4dff;
+            --secondary-color: #3a3f5c;
+            --background-color: #f5f7fa;
+            --text-color: #333;
+            --light-text-color: #666;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
             line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
+            color: var(--text-color);
         }
-        .container {
-            width: 80%;
-            margin: auto;
-            overflow: hidden;
-            padding: 20px;
-        }
+
         header {
-            background: #333;
-            color: #fff;
-            padding-top: 30px;
-            min-height: 70px;
-            border-bottom: #007bff 3px solid;
+            background-color: #fff;
+            padding: 15px 5%;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            width: 90%;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        header a {
-            color: #fff;
-            text-decoration: none;
-            text-transform: uppercase;
-            font-size: 16px;
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
         }
-        header ul {
+
+        .logo span {
+            color: var(--secondary-color);
+        }
+
+        nav ul {
+            display: flex;
+            list-style-type: none;
+            margin: 0;
             padding: 0;
-            margin: 0;
-            list-style: none;
-            overflow: hidden;
         }
-        header li {
-            float: left;
-            display: inline;
-            padding: 0 20px 0 20px;
+
+        nav ul li {
+            margin-left: 20px;
         }
-        header #branding {
-            float: left;
+
+        nav a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 16px;
+            transition: color 0.3s ease;
         }
-        header #branding h1 {
-            margin: 0;
+
+        nav a:hover {
+            color: var(--primary-color);
         }
-        header nav {
-            float: right;
-            margin-top: 10px;
-        }
-        .form-container {
-            background: #fff;
+
+        .container {
+            max-width: 800px;
+            margin: 100px auto 40px;
             padding: 20px;
-            margin-top: 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
+
+        .form-container {
+            margin-top: 20px;
+        }
+
         .form-container h2 {
             margin-top: 0;
+            color: var(--primary-color);
+            font-size: 24px;
         }
+
         .form-group {
             margin-bottom: 15px;
         }
+
         .form-group label {
+            font-weight: bold;
+            color: var(--secondary-color);
             display: block;
             margin-bottom: 5px;
         }
-        .form-group input, .form-group textarea {
+
+        .form-group input,
+        .form-group textarea {
             width: 100%;
             padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 3px;
-        }
-        .form-group textarea {
-            height: 150px;
-            resize: vertical;
-        }
-        .button {
-            display: inline-block;
-            padding: 10px 20px;
-            background: #007bff;
-            color: #fff;
-            text-decoration: none;
             border-radius: 5px;
-            margin-top: 10px;
-            text-align: center;
+            border: 1px solid #ddd;
+            font-size: 16px;
         }
+
+        .form-group textarea {
+            resize: vertical;
+            height: 150px;
+        }
+
+        .form-group input[type="file"] {
+            padding: 5px;
+            font-size: 14px;
+        }
+
+        .button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            text-align: center;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
         .button:hover {
-            background: #0056b3;
+            background-color: #6200ea;
         }
     </style>
 </head>
 <body>
     <header>
-        <div class="container">
-            <div id="branding">
-                <h1><span class="highlight">Script</span>Box</h1>
-            </div>
-            <nav>
-                <ul>
-                    <li><a href="/index">홈</a></li>
-                    <li><a href="/qbox">게시판</a></li>
-                    <li><a href="/login">로그인</a></li>
-                    <li><a href="/register">회원가입</a></li>
-                </ul>
-            </nav>
+        <div class="logo">
+            <span>Script</span>Box
         </div>
+        <nav>
+            <ul>
+                <li><a href="/index">홈</a></li>
+                <li><a href="/qbox">게시판</a></li>
+                <li><a href="/login">로그인</a></li>
+                <li><a href="/register">회원가입</a></li>
+            </ul>
+        </nav>
     </header>
 
     <div class="container">
         <div class="form-container">
             <h2>새 게시물 작성</h2>
             <form action="/post/create_qbox" method="post" enctype="multipart/form-data">
-                <label for="title">Title:</label>
-                <input type="text" id="title" name="title" required>
-                <br>
-                <label for="content">Content:</label>
-                <textarea id="content" name="content" rows="4" required></textarea>
-                <br>
-                <label for="file">File (optional):</label>
-                <input type="file" id="file" name="file">
-                <br>
-                <button type="submit">Submit</button>
+                <div class="form-group">
+                    <label for="title">Title:</label>
+                    <input type="text" id="title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="content">Content:</label>
+                    <textarea id="content" name="content" rows="4" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="file">File (optional):</label>
+                    <input type="file" id="file" name="file">
+                </div>
+                <button type="submit" class="button">Submit</button>
             </form>
-            
         </div>
     </div>
 </body>
