@@ -12,6 +12,8 @@
             --background-color: #f5f7fa;
             --text-color: #333;
             --light-text-color: #666;
+            --card-bg-color: white;
+            --card-shadow-color: rgba(0, 0, 0, 0.1);
         }
 
         body {
@@ -115,10 +117,10 @@
         }
 
         .column {
-            background-color: white;
+            background-color: var(--card-bg-color);
             padding: 30px;
             border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 5px 15px var(--card-shadow-color);
             flex: 1 1 300px;
         }
 
@@ -128,25 +130,53 @@
             font-size: 24px;
         }
 
-        .column ul {
-            padding-left: 20px;
+        .card-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
         }
 
-        .column li {
-            margin-bottom: 15px;
+        .card-list li {
+            background-color: var(--card-bg-color);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px var(--card-shadow-color);
+            transition: background-color 0.3s ease;
+        }
+
+        .card-list li:hover {
+            background-color: var(--background-color);
+        }
+
+        .card-list a {
+            font-size: 18px;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .card-list p {
+            margin: 0;
+            font-size: 14px;
+            color: var(--light-text-color);
         }
 
         .add-button {
             background-color: var(--primary-color);
             color: white;
             border: none;
-            padding: 12px 20px;
-            border-radius: 25px;
+            padding: 8px 16px;
+            border-radius: 20px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 14px;
             transition: background-color 0.3s ease;
             display: inline-block;
             margin-top: 20px;
+            float: right;
+            clear: both;
         }
 
         .add-button:hover {
@@ -194,6 +224,14 @@
             .column {
                 flex-basis: 100%;
             }
+
+            .add-button {
+                float: none;
+                display: block;
+                width: 100%;
+                text-align: center;
+                margin-top: 10px;
+            }
         }
     </style>
 </head>
@@ -229,7 +267,7 @@
         <section class="content">
             <div class="column">
                 <h2>인기 작품</h2>
-                <ul>
+                <ul class="card-list">
                     {% for post, like_count in top_posts %}
                         <li>
                             <a href="/viewqbox/{{ post.id }}">{{ post.title }}</a>
@@ -243,7 +281,7 @@
 
             <div class="column">
                 <h2>최신 게시글</h2>
-                <ul>
+                <ul class="card-list">
                     {% for post in latest_posts %}
                         <li>
                             <a href="/viewqbox/{{ post.id }}">{{ post.title }}</a>

@@ -4,50 +4,159 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Page : ScriptBox</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #7c4dff;
+            --secondary-color: #3a3f5c;
+            --background-color: #f5f7fa;
+            --text-color: #333;
+            --light-text-color: #666;
+            --table-header-color: #6200ea;
+            --table-row-bg: #f9f9f9;
+            --table-row-hover-bg: #eaeaea;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            line-height: 1.6;
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 100px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h1, h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 40px;
+            font-size: 16px;
+        }
+
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--table-header-color);
+            color: #fff;
+        }
+
+        tr:nth-child(even) {
+            background-color: var(--table-row-bg);
+        }
+
+        tr:hover {
+            background-color: var(--table-row-hover-bg);
+        }
+
+        button, input[type="submit"] {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover, input[type="submit"]:hover {
+            background-color: #6200ea;
+        }
+
+        form {
+            margin-top: 20px;
+        }
+
+        label {
+            font-weight: bold;
+            color: var(--secondary-color);
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="email"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Admin Page</h1>
-    <h2>User Management</h2>
-    
-    <!-- User List -->
-    <table border="1">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nickname</th>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Admin</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for user in users %}
-            <tr>
-                <td>{{ user.id }}</td>
-                <td>{{ user.nickname }}</td>
-                <td>{{ user.username }}</td>
-                <td>{{ user.email }}</td>
-                <td>{{ user.admin }}</td>
-                <td>
-                    {% if user.admin == 0 %}
-                        <form action="/admin/set_admin/{{ user.id }}" method="post" style="display:inline;">
-                            <button type="submit">Make Admin</button>
-                        </form>
-                    {% else %}
-                        Admin
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="container">
+        <h1>Admin Page</h1>
+        <h2>User Management</h2>
+        
+        <!-- User List -->
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nickname</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Admin</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.nickname }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.admin }}</td>
+                    <td>
+                        <div class="action-buttons">
+                            {% if user.admin == 0 %}
+                                <form action="/admin/set_admin/{{ user.id }}" method="post" style="display:inline;">
+                                    <button type="submit">Make Admin</button>
+                                </form>
+                            {% else %}
+                                Admin
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
 
-    <h2>Reset User Password</h2>
-    <form action="/admin/reset_password" method="post">
-        <label for="email">User Email:</label>
-        <input type="email" id="email" name="email" required>
-        <button type="submit">Reset Password</button>
-    </form>
+        <h2>Reset User Password</h2>
+        <form action="/admin/reset_password" method="post">
+            <label for="email">User Email:</label>
+            <input type="email" id="email" name="email" required>
+            <input type="submit" value="Reset Password">
+        </form>
+    </div>
 </body>
 </html>
