@@ -93,36 +93,32 @@ async def home(request: Request, db: Session = Depends(get_db)):
         except JWTError:
             pass
 
-    # Subquery to count likes per post
-    like_subquery = db.query(
-        LikeModel.post_id,
-        func.count(LikeModel.post_id).label("like_count")
-    ).group_by(LikeModel.post_id).subquery()
+    # Subquery to count likes per Sharebox post
+    sharebox_like_subquery = db.query(
+        ShareboxLikeModel.post_id,
+        func.count(ShareboxLikeModel.post_id).label("like_count")
+    ).group_by(ShareboxLikeModel.post_id).subquery()
 
-    # Aliased models
-    post_alias = aliased(QboardPostModel)
-    like_alias = aliased(like_subquery)
-
-    # Query to get top 3 posts with most likes
-    top_posts_query = db.query(
-        post_alias,
-        like_alias.c.like_count
+    # Query to get top 3 Sharebox posts with most likes
+    sharebox_top_posts_query = db.query(
+        ShareboxPostModel,
+        sharebox_like_subquery.c.like_count
     ).outerjoin(
-        like_alias, post_alias.id == like_alias.c.post_id
+        sharebox_like_subquery, ShareboxPostModel.id == sharebox_like_subquery.c.post_id
     ).order_by(
-        like_alias.c.like_count.desc()
+        sharebox_like_subquery.c.like_count.desc()
     ).limit(3)
 
-    top_posts = top_posts_query.all()
+    sharebox_top_posts = sharebox_top_posts_query.all()
 
-    # Query to get latest 3 posts
+    # Query to get latest 3 posts from Qboard
     latest_posts_query = db.query(QboardPostModel).order_by(QboardPostModel.created_at.desc()).limit(3)
     latest_posts = latest_posts_query.all()
 
     return templates.TemplateResponse("index.html", {
         "request": request,
         "user_info": user_info,
-        "top_posts": top_posts,
+        "sharebox_top_posts": sharebox_top_posts,
         "latest_posts": latest_posts
     })
 

@@ -268,15 +268,15 @@
             <div class="column">
                 <h2>인기 작품</h2>
                 <ul class="card-list">
-                    {% for post, like_count in top_posts %}
+                    {% for post, like_count in sharebox_top_posts %}
                         <li>
-                            <a href="/viewqbox/{{ post.id }}">{{ post.title }}</a>
+                            <a href="/viewsharebox/{{ post.id }}">{{ post.title }}</a>
                             <p>작성자: {{ post.nickname }}</p>
                             <p>좋아요: {{ like_count }}</p>
                         </li>
                     {% endfor %}
                 </ul>
-                <a href="#" class="add-button">+ 내 작품 만들기</a>
+                <a href="/post/sharebox/create" class="add-button">+ 내 작품 만들기</a>
             </div>
 
             <div class="column">
