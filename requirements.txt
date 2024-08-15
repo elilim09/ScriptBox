@@ -7,3 +7,4 @@ dropbox
 google-generativeai
 requests
 python-dotenv
+uvicorn
