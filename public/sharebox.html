@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Sharebox - 작품 공유 게시판</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 0;
+            text-align: center;
+        }
+        nav a {
+            color: #fff;
+            margin: 0 15px;
+            text-decoration: none;
+        }
+        main {
+            padding: 20px;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        ul li {
+            background-color: #fff;
+            margin-bottom: 10px;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 10px 0;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Sharebox</h1>
+        <nav>
+            <a href="/sharebox">Home</a>
+            <a href="/post/sharebox/create">새 게시물 작성</a>
+            <a href="/logout">로그아웃</a>
+        </nav>
+    </header>
+
+    <main>
+        <h2>작품 목록</h2>
+        <ul>
+            {% for post in posts %}
+                <li>
+                    <h3><a href="/viewsharebox/{{ post.id }}">{{ post.title }}</a></h3>
+                    <p>작성자: {{ post.nickname }}</p>
+                    <p>작성일: {{ post.created_at }}</p>
+                    <p>좋아요: {{ post.like_count }}</p>
+                </li>
+            {% endfor %}
+        </ul>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Sharebox. All rights reserved.</p>
+    </footer>
+</body>
+</html>

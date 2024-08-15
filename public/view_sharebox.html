@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ post.title }} - Sharebox</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 0;
+            text-align: center;
+        }
+        nav a, nav form button {
+            color: #fff;
+            margin: 0 15px;
+            text-decoration: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font: inherit;
+        }
+        main {
+            padding: 20px;
+        }
+        article {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        section {
+            margin-bottom: 20px;
+        }
+        section h2 {
+            margin-top: 0;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        ul li {
+            background-color: #fff;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        ul li form {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-family: inherit;
+        }
+        button {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #555;
+        }
+        footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 10px 0;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+    </style>
+    <script>
+        function confirmDelete() {
+            return confirm("정말 삭제하시겠습니까?");
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <h1>{{ post.title }}</h1>
+        <nav>
+            <a href="/sharebox">Home</a>
+            {% if user_info and (user_info.nickname == post.nickname or user_info.admin) %}
+                <a href="/post/sharebox/edit/{{ post.id }}">수정</a>
+                <form action="/post/sharebox/delete/{{ post.id }}" method="post" onsubmit="return confirmDelete();" style="display:inline;">
+                    <button type="submit">삭제</button>
+                </form>
+            {% endif %}
+            <a href="/logout">로그아웃</a>
+        </nav>
+    </header>
+
+    <main>
+        <article>
+            <p>작성자: {{ post.nickname }}</p>
+            <p>작성일: {{ post.created_at }}</p>
+            <p>{{ post.content }}</p>
+            {% if post.file_url %}
+                <p><a href="{{ post.file_url }}" target="_blank">첨부 파일 다운로드</a></p>
+            {% endif %}
+        </article>
+
+        <section>
+            <h2>댓글</h2>
+            <ul>
+                {% for comment in comments %}
+                    <li>
+                        <p>{{ comment.nickname }}: {{ comment.content }}</p>
+                        {% if user_info and (user_info.nickname == comment.nickname or user_info.admin) %}
+                            <form action="/comment/sharebox/delete/{{ comment.id }}" method="post" onsubmit="return confirmDelete();">
+                                <button type="submit">삭제</button>
+                            </form>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+            {% if user_info %}
+                <form action="/post/sharebox/comment" method="post">
+                    <input type="hidden" name="post_id" value="{{ post.id }}">
+                    <textarea name="content" placeholder="댓글을 입력하세요" required></textarea>
+                    <button type="submit">댓글 작성</button>
+                </form>
+            {% else %}
+                <p>로그인 후 댓글을 작성할 수 있습니다.</p>
+            {% endif %}
+        </section>
+
+        <section>
+            <h2>좋아요</h2>
+            <form action="/post/sharebox/{{ post.id }}/like" method="post">
+                <button type="submit">{{ "좋아요 취소" if post_user_liked else "좋아요" }}</button>
+            </form>
+            <p>현재 좋아요 수: {{ like_count }}</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Sharebox. All rights reserved.</p>
+    </footer>
+</body>
+</html>
