@@ -128,13 +128,21 @@
         .result-content p {
             white-space: pre-wrap; /* 줄 바꿈을 유지합니다 */
         }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .logo span {
+            color: var(--secondary-color);
+        }
     </style>
 </head>
 <body>
     <header>
-        <div class="logo">
-            <img src="https://i.ibb.co/vBYZZwr/Script-Box.png" alt="ScriptBox 로고" style="width: 100px;">
-            ScriptBox
+        <div class="logo" onclick="window.location.href='/index'">
+            <span>Script</span>Box
         </div>
         <nav>
             <ul>

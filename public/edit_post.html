@@ -108,12 +108,22 @@
         .current-file a:hover {
             text-decoration: underline;
         }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .logo span {
+            color: var(--secondary-color);
+        }
     </style>
 </head>
 <body>
     <div class="edit-post-container">
-        <h1>Edit Post</h1>
-        
+        <div class="logo" onclick="window.location.href='/index'">
+            <span>Script</span>Box
+        </div>
         <form action="/post/qbox/edit/{{ post.id }}" method="POST" enctype="multipart/form-data">
             <div>
                 <label for="title">Title:</label>

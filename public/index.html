@@ -233,17 +233,28 @@
                 margin-top: 10px;
             }
         }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .logo span {
+            color: var(--secondary-color);
+        }
     </style>
 </head>
 <body>
     <header>
-        <div class="logo">
-            <img src="https://i.ibb.co/vBYZZwr/Script-Box.png" alt="ScriptBox 로고" style="width: 100px;">
+        <div class="logo" onclick="window.location.href='/index'">
+            <span>Script</span>Box
         </div>
         <nav>
             <ul>
                 <li><a href="/index">홈</a></li>
-                <li><a href="/qbox">게시판</a></li>
+                <li><a href="/qbox">Qbox</a></li>
+                <li><a href="/sharebox">Share box</a></li>
+                <li><a href="/code">코드 해석기</a></li>
                 {% if user_info %}
                     <li><button id="logout-button">로그아웃</button></li>
                     <li><a href="/mypage">내 정보</a></li>

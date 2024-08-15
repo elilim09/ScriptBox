@@ -242,8 +242,18 @@ async def code_ai(code: str = Form(...)):
     return responses
 
 @app.get("/code")
-def qbox_create(request: Request):
-    return templates.TemplateResponse("Code.html", {"request": request})
+def qbox_create(request: Request, db: Session = Depends(get_db)):
+    # 로그인 상태 확인
+    access_token = request.cookies.get("access_token")
+    user_info = None
+
+    if access_token:
+        try:
+            payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
+            user_info = {"nickname": payload.get("nickname"), "email": payload.get("sub")}
+        except JWTError:
+            pass
+    return templates.TemplateResponse("Code.html", {"request": request, "user_info": user_info})
 @app.get("/qbox_create")
 def qbox_create(request: Request):
     return templates.TemplateResponse("qbox_create.html", {"request": request})
@@ -525,7 +535,7 @@ async def update_post(
 
 
 @app.post("/post/qbox/delete/{post_id}")
-def delete_post(post_id: int, db: Session = Depends(get_db)):
+def delete_post(request: Request, post_id: int, db: Session = Depends(get_db)):
     # Delete comments associated with the post
     db.query(QboardCommentModel).filter(QboardCommentModel.post_id == post_id).delete(synchronize_session=False)
     
@@ -567,35 +577,28 @@ async def delete_comment(request: Request, comment_id: int, db: Session = Depend
         return {"message": "Comment deleted successfully"}
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-@app.get("/admin")
-async def get_all_users(request: Request, db: Session = Depends(get_db)):
-    # Check if the user is authenticated
+@app.get("/mypage")
+async def mypage(request: Request, db: Session = Depends(get_db)):
     access_token = request.cookies.get("access_token")
+    
     if not access_token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
-
+    
     try:
         payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
-        is_admin = payload.get("admin") == 1
-        if not is_admin:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+        user_email = payload.get("sub")
+        
+        if not user_email:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication token")
+        
+        user = db.query(UserModel).filter(UserModel.email == user_email).first()
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        
     except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-
-    # Fetch all users, excluding passwords
-    users = db.query(UserModel).all()
-    user_list = [
-        {
-            "id": user.id,
-            "nickname": user.nickname,
-            "username": user.username,
-            "email": user.email,
-            "admin": user.admin
-        }
-        for user in users
-    ]
-
-    return templates.TemplateResponse("admin.html", {"request": request, "users": user_list})
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication token")
+    
+    return templates.TemplateResponse("mypage.html", {"request": request, "user": user, "user_info": {"nickname": user.nickname, "email": user.email}})
 
 @app.post("/admin/reset_password")
 async def reset_password(
@@ -633,7 +636,9 @@ async def reset_password(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Database integrity error")
 
     return templates.TemplateResponse("admin.html", {"request": request})
-
+@app.get("/admin")
+def adminpage(request: Request):
+    return templates.TemplateResponse("admin.html", {"request": request})
 @app.post("/admin/set_admin/{user_id}")
 async def set_admin(user_id: int, db: Session = Depends(get_db)):
     user = db.query(UserModel).filter(UserModel.id == user_id).first()
@@ -965,18 +970,23 @@ def delete_sharebox_post(post_id: int, db: Session = Depends(get_db)):
 
 @app.get("/sharebox")
 async def view_sharebox(request: Request, db: Session = Depends(get_db)):
-    """
-    Sharebox 게시물 목록 조회.
-    """
+    access_token = request.cookies.get("access_token")
+    user_info = None
+
+    if access_token:
+        try:
+            payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
+            user_info = {"nickname": payload.get("nickname"), "email": payload.get("sub")}
+        except JWTError:
+            pass
+
+    # 게시물 조회
     posts = db.query(ShareboxPostModel).order_by(ShareboxPostModel.created_at.desc()).all()
-    return templates.TemplateResponse("sharebox.html", {"request": request, "posts": posts})
+
+    return templates.TemplateResponse("sharebox.html", {"request": request, "posts": posts, "user_info": user_info})
 
 @app.get("/viewsharebox/{post_id}")
 async def view_sharebox_post(post_id: int, request: Request, db: Session = Depends(get_db)):
-    """
-    특정 Sharebox 게시물 조회.
-    """
-    # 로그인 상태 확인
     access_token = request.cookies.get("access_token")
     user_info = None
     post_user_liked = False

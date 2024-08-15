@@ -2,88 +2,148 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>{{ post.title }} 수정 - Sharebox</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Post : ScriptBox</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #7c4dff;
+            --secondary-color: #3a3f5c;
+            --background-color: #f5f7fa;
+            --text-color: #333;
+            --light-text-color: #666;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
+            background-color: var(--background-color);
+            line-height: 1.6;
+            color: var(--text-color);
         }
-        header {
-            background-color: #333;
-            color: #fff;
-            padding: 10px 0;
-            text-align: center;
-        }
-        nav a {
-            color: #fff;
-            margin: 0 15px;
-            text-decoration: none;
-        }
-        main {
+
+        .edit-post-container {
+            max-width: 800px;
+            margin: 100px auto 40px;
             padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
+
+        h1 {
+            font-size: 28px;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        form div {
+            margin-bottom: 20px;
+        }
+
         label {
+            font-weight: bold;
+            color: var(--secondary-color);
             display: block;
             margin-bottom: 5px;
         }
-        input[type="text"], textarea, input[type="file"] {
+
+        input[type="text"],
+        textarea {
             width: 100%;
             padding: 10px;
-            margin-bottom: 10px;
+            border-radius: 5px;
             border: 1px solid #ccc;
-            border-radius: 5px;
-            font-family: inherit;
+            font-size: 16px;
         }
-        button {
-            background-color: #333;
-            color: #fff;
-            padding: 10px 20px;
+
+        input[type="file"] {
+            margin-top: 10px;
+        }
+
+        button[type="submit"] {
+            background-color: var(--primary-color);
+            color: white;
             border: none;
-            border-radius: 5px;
+            padding: 12px 20px;
+            border-radius: 25px;
             cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            display: inline-block;
+            margin-top: 10px;
         }
-        button:hover {
-            background-color: #555;
+
+        button[type="submit"]:hover {
+            background-color: #6200ea;
         }
-        footer {
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            padding: 10px 0;
-            position: fixed;
-            width: 100%;
-            bottom: 0;
+
+        .cancel-button {
+            background-color: #ccc;
+            color: var(--text-color);
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            margin-top: 10px;
+            display: inline-block;
+            transition: background-color 0.3s ease;
+        }
+
+        .cancel-button:hover {
+            background-color: #aaa;
+        }
+
+        .current-file {
+            margin-top: 10px;
+        }
+
+        .current-file a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .current-file a:hover {
+            text-decoration: underline;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .logo span {
+            color: var(--secondary-color);
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>게시물 수정</h1>
-        <nav>
-            <a href="/sharebox">Home</a>
-            <a href="/logout">로그아웃</a>
-        </nav>
-    </header>
-
-    <main>
-        <form action="/post/sharebox/edit/{{ post.id }}" method="post" enctype="multipart/form-data">
-            <label for="title">제목</label>
-            <input type="text" id="title" name="title" value="{{ post.title }}" required>
-
-            <label for="content">내용</label>
-            <textarea id="content" name="content" required>{{ post.content }}</textarea>
-
-            <label for="file">첨부 파일 (선택)</label>
-            <input type="file" id="file" name="file">
-
-            <button type="submit">수정 완료</button>
+    <div class="edit-post-container">
+        <div class="logo" onclick="window.location.href='/index'">
+            <span>Script</span>Box
+        </div>
+        
+        <form action="/post/sharebox/edit/{{ post.id }}" method="POST" enctype="multipart/form-data">
+            <div>
+                <label for="title">Title:</label>
+                <input type="text" id="title" name="title" value="{{ post.title }}" required>
+            </div>
+            <div>
+                <label for="content">Content:</label>
+                <textarea id="content" name="content" rows="10" required>{{ post.content }}</textarea>
+            </div>
+            <div>
+                <label for="file">Upload file:</label>
+                <input type="file" id="file" name="file">
+                {% if post.file_url %}
+                    <p class="current-file">Current file: <a href="{{ post.file_url }}" target="_blank">Download current file</a></p>
+                {% endif %}
+            </div>
+            <button type="submit">Update Post</button>
+            <a href="/viewsharebox/{{ post.id }}" class="cancel-button">Cancel</a>
         </form>
-    </main>
-
-    <footer>
-        <p>&copy; 2024 Sharebox. All rights reserved.</p>
-    </footer>
+    </div>
 </body>
 </html>

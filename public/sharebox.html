@@ -2,76 +2,193 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Sharebox - 작품 공유 게시판</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q.box : ScriptBox</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #7c4dff;
+            --secondary-color: #3a3f5c;
+            --background-color: #f5f7fa;
+            --text-color: #333;
+            --light-text-color: #666;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
+            background-color: var(--background-color);
+            line-height: 1.6;
+            color: var(--text-color);
         }
+
         header {
-            background-color: #333;
-            color: #fff;
-            padding: 10px 0;
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 5%;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            width: 90%;
+            top: 0;
+            left: 0;
+            z-index: 1000;
         }
-        nav a {
-            color: #fff;
-            margin: 0 15px;
-            text-decoration: none;
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
         }
-        main {
-            padding: 20px;
+
+        .logo img {
+            width: 100px;
+            margin-right: 10px;
         }
-        ul {
-            list-style: none;
+
+        nav ul {
+            display: flex;
+            flex-wrap: wrap;
+            list-style-type: none;
+            margin: 0;
             padding: 0;
         }
-        ul li {
-            background-color: #fff;
+
+        nav ul li {
+            margin-left: 20px;
             margin-bottom: 10px;
+        }
+
+        nav a, nav button {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            font-size: 16px;
+        }
+
+        nav a:hover, nav button:hover {
+            color: var(--primary-color);
+        }
+
+        .container {
+            margin-top: 120px;
+            padding: 40px 5%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .board {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .post-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .post-list li {
+            background-color: #f9f9f9;
             padding: 15px;
             border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
         }
-        footer {
-            background-color: #333;
-            color: #fff;
+
+        .post-list li:hover {
+            background-color: #f1f1f1;
+        }
+
+        .post-title {
+            font-size: 18px;
+            color: var(--primary-color);
+            text-decoration: none;
+            display: block;
+        }
+
+        .post-meta {
+            font-size: 14px;
+            color: var(--light-text-color);
+            margin-top: 5px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-size: 16px;
             text-align: center;
-            padding: 10px 0;
-            position: fixed;
-            width: 100%;
-            bottom: 0;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #6200ea;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .logo span {
+            color: var(--secondary-color);
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>Sharebox</h1>
+        <div class="logo" onclick="window.location.href='/index'">
+            <span>Script</span>Box
+        </div>
         <nav>
-            <a href="/sharebox">Home</a>
-            <a href="/post/sharebox/create">새 게시물 작성</a>
-            <a href="/logout">로그아웃</a>
+            <ul>
+                <li><a href="/index">홈</a></li>
+                <li><a href="/qbox">게시판</a></li>
+                {% if user_info %}
+                    <li><a href="/post/logout">로그아웃</a></li>
+                    <li><a href="/mypage">내 정보</a></li>
+                    {% if user_info.admin == 1 %}
+                        <li><a href="/admin">관리자</a></li>
+                    {% endif %}
+                {% else %}
+                    <li><a href="/login">로그인</a></li>
+                    <li><a href="/register">회원가입</a></li>
+                {% endif %}
+            </ul>
         </nav>
     </header>
 
-    <main>
-        <h2>작품 목록</h2>
-        <ul>
-            {% for post in posts %}
-                <li>
-                    <h3><a href="/viewsharebox/{{ post.id }}">{{ post.title }}</a></h3>
-                    <p>작성자: {{ post.nickname }}</p>
-                    <p>작성일: {{ post.created_at }}</p>
-                    <p>좋아요: {{ post.like_count }}</p>
-                </li>
-            {% endfor %}
-        </ul>
-    </main>
-
-    <footer>
-        <p>&copy; 2024 Sharebox. All rights reserved.</p>
-    </footer>
+    <div class="container">
+        <div class="board">
+            <ul class="post-list">
+                {% for post in posts %}
+                    <li>
+                        <a class="post-title" href="{{ url_for('view_sharebox_post', post_id=post.id) }}">{{ post.title }}</a>
+                        <div class="post-meta">by {{ post.nickname }} on {{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                    </li>
+                {% endfor %}
+            </ul>
+            {% if user_info %}
+                <a href="/create_sharebox_post" class="button">새 게시물 작성</a>
+            {% endif %}
+        </div>
+    </div>
 </body>
 </html>
