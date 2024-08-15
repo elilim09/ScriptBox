@@ -1,0 +1,9 @@
+fastapi
+sqlalchemy
+passlib
+python-jose
+jinja2
+dropbox
+google-generativeai
+requests
+python-dotenv
