@@ -58,3 +58,35 @@ class QboardCommentSchema(QboardCommentBaseSchema):
 
 class QboardPostDetailSchema(QboardPostSchema):
     comments: List[QboardCommentSchema] = []
+
+class ShareboxPostBaseSchema(BaseModel):
+    title: str
+    content: str
+    nickname: str
+    file_url: Optional[str] = None 
+
+class ShareboxPostCreateSchema(ShareboxPostBaseSchema):
+    pass
+
+class ShareboxPostSchema(ShareboxPostBaseSchema):
+    id: int
+    created_at: datetime
+
+    class Config:
+        orm_mode = True
+
+class ShareboxCommentBaseSchema(BaseModel):
+    content: str
+    nickname: str
+
+class ShareboxCommentCreateSchema(ShareboxCommentBaseSchema):
+    post_id: int
+
+class ShareboxCommentSchema(ShareboxCommentBaseSchema):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+class ShareboxPostDetailSchema(ShareboxPostSchema):
+    comments: List[ShareboxCommentSchema] = []

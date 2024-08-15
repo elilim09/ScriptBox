@@ -45,3 +45,34 @@ class LikeModel(Base):
     __table_args__ = (
         UniqueConstraint('user_id', 'post_id', name='unique_user_post_like'),
     )
+class ShareboxPostModel(Base):
+    __tablename__ = 'sharebox_posts'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    content = Column(Text, nullable=False)
+    nickname = Column(String, nullable=False)
+    file_url = Column(String, nullable=True)
+    created_at = Column(TIMESTAMP, server_default=func.now())
+    
+    comments = relationship("ShareboxCommentModel", back_populates="post", cascade="all, delete-orphan")
+
+class ShareboxCommentModel(Base):
+    __tablename__ = 'sharebox_comments'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    content = Column(Text, nullable=False)
+    nickname = Column(String, nullable=False)
+    post_id = Column(Integer, ForeignKey('sharebox_posts.id'), index=True)
+    
+    post = relationship("ShareboxPostModel", back_populates="comments")
+
+class ShareboxLikeModel(Base):
+    __tablename__ = 'sharebox_likes'
+    
+    user_id = Column(Integer, ForeignKey('user.id', ondelete='CASCADE'), primary_key=True)
+    post_id = Column(Integer, ForeignKey('sharebox_posts.id', ondelete='CASCADE'), primary_key=True)
+    
+    __table_args__ = (
+        UniqueConstraint('user_id', 'post_id', name='unique_user_sharebox_like'),
+    )

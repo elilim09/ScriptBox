@@ -308,7 +308,7 @@ async def create_qbox_post(
         
         try:
             # Define folder path in Dropbox
-            folder_path = f'/{nickname}-{db_post.id}'
+            folder_path = f'/q-{nickname}-{db_post.id}'
 
             # Create folder if it doesn't exist
             try:
@@ -383,7 +383,7 @@ async def view_qbox(post_id: int, request: Request, db: Session = Depends(get_db
         "file_url": file_url
     })
 
-@app.post("/post/comment")
+@app.post("/post/qbox/comment")
 async def create_comment(
     request: Request,
     post_id: int = Form(...),
@@ -422,7 +422,7 @@ async def create_comment(
     # 게시물 상세 페이지로 리디렉션
     return RedirectResponse(url=f"/viewqbox/{post_id}", status_code=status.HTTP_303_SEE_OTHER)
 
-@app.post("/post/{post_id}/like")
+@app.post("/post/qbox/{post_id}/like")
 async def like_post(post_id: int, request: Request, db: Session = Depends(get_db)):
     access_token = request.cookies.get("access_token")
     if not access_token:
@@ -458,7 +458,7 @@ async def like_post(post_id: int, request: Request, db: Session = Depends(get_db
     like_count = db.query(func.count(LikeModel.post_id)).filter(LikeModel.post_id == post_id).scalar() or 0
 
     return {"status": status, "message": message, "like_count": like_count}
-@app.get("/post/edit/{post_id}")
+@app.get("/post/qbox/edit/{post_id}")
 async def edit_post(post_id: int, request: Request, db: Session = Depends(get_db)):
     access_token = request.cookies.get("access_token")
     user_info = None
@@ -479,7 +479,7 @@ async def edit_post(post_id: int, request: Request, db: Session = Depends(get_db
 
     return templates.TemplateResponse("edit_post.html", {"request": request, "post": post})
 
-@app.post("/post/edit/{post_id}")
+@app.post("/post/qbox/edit/{post_id}")
 async def update_post(
     request: Request,
     post_id: int,
@@ -528,7 +528,7 @@ async def update_post(
 
 
 
-@app.post("/post/delete/{post_id}")
+@app.post("/post/qbox/delete/{post_id}")
 def delete_post(post_id: int, db: Session = Depends(get_db)):
     # Delete comments associated with the post
     db.query(QboardCommentModel).filter(QboardCommentModel.post_id == post_id).delete(synchronize_session=False)
@@ -542,8 +542,8 @@ def delete_post(post_id: int, db: Session = Depends(get_db)):
     db.commit()
     
     return templates.TemplateResponse("Qbox.html", {"request": request})
-@app.post("/comment/delete/{comment_id}")
-async def delete_comment(comment_id: int, request: Request, db: Session = Depends(get_db)):
+@app.post("/comment/qbox/delete/{comment_id}")
+async def delete_comment(request: Request, comment_id: int, db: Session = Depends(get_db)):
     # 로그인 상태 확인
     access_token = request.cookies.get("access_token")
 
@@ -640,7 +640,7 @@ async def reset_password(
 
 @app.post("/admin/set_admin/{user_id}")
 async def set_admin(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(UserModel).filter(UserModel.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
@@ -731,3 +731,238 @@ def get_current_user(db: Session, access_token: str) -> UserModel:
         return user
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication token")
+
+@app.post("/post/create_sharebox")
+async def create_sharebox_post(
+    request: Request,
+    title: str = Form(...),
+    content: str = Form(...),
+    file: UploadFile = File(None),
+    db: Session = Depends(get_db)
+):
+    # 인증 체크
+    access_token = request.cookies.get("access_token")
+    if access_token is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    try:
+        payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
+        nickname = payload.get("nickname")
+        if nickname is None:
+            raise HTTPException(status_code=401, detail="Invalid authentication token")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid authentication token")
+
+    db_post = ShareboxPostModel(title=title, content=content, nickname=nickname, file_url=None)
+    try:
+        db.add(db_post)
+        db.commit()
+        db.refresh(db_post)
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Database integrity error")
+
+    if file and file.filename:
+        file_content = await file.read()
+        if len(file_content) == 0:
+            return {"msg": "File was empty, post created without file"}
+        
+        try:
+            # Sharebox의 경우 's-'로 시작하는 폴더 경로 정의
+            folder_path = f'/s-{nickname}-{db_post.id}'
+            try:
+                dbx.files_get_metadata(folder_path)
+            except dropbox.exceptions.ApiError as e:
+                if e.error.is_path() and e.error.get_path().is_not_found():
+                    dbx.files_create_folder_v2(folder_path)
+                else:
+                    raise HTTPException(status_code=500, detail=f"Failed to check or create folder: {str(e)}")
+
+            file_path = f'{folder_path}/{file.filename}'
+            dbx.files_upload(file_content, file_path, mode=dropbox.files.WriteMode("overwrite"))
+            
+            link_response = dbx.sharing_create_shared_link_with_settings(file_path)
+            shared_link = link_response.url
+            
+            db_post.file_url = shared_link
+            db.add(db_post)
+            db.commit()
+            db.refresh(db_post)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"File upload failed: {str(e)}")
+
+    return RedirectResponse(url="/sharebox", status_code=303)
+@app.post("/post/sharebox/{post_id}/like")
+async def like_sharebox_post(post_id: int, request: Request, db: Session = Depends(get_db)):
+    access_token = request.cookies.get("access_token")
+    if not access_token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="로그인 후 사용해주세요.")
+
+    try:
+        payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
+        if not email:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="로그인 후 사용해주세요.")
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="유효하지 않은 토큰입니다.")
+
+    user = db.query(UserModel).filter(UserModel.email == email).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="유효하지 않은 사용자입니다.")
+
+    like = db.query(ShareboxLikeModel).filter(ShareboxLikeModel.post_id == post_id, ShareboxLikeModel.user_id == user.id).first()
+    
+    if like:
+        db.delete(like)
+        db.commit()
+        message = "Like removed"
+    else:
+        new_like = ShareboxLikeModel(post_id=post_id, user_id=user.id)
+        db.add(new_like)
+        db.commit()
+        message = "Like added"
+
+    # 좋아요 수를 새로 계산
+    like_count = db.query(func.count(ShareboxLikeModel.post_id)).filter(ShareboxLikeModel.post_id == post_id).scalar() or 0
+
+    return {"status": "success", "message": message, "like_count": like_count}
+@app.post("/post/sharebox/comment")
+async def create_sharebox_comment(
+    request: Request,
+    post_id: int = Form(...),
+    content: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    access_token = request.cookies.get("access_token")
+    if access_token is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    try:
+        payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
+        nickname = payload.get("nickname")
+        if nickname is None:
+            raise HTTPException(status_code=401, detail="Invalid authentication token")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid authentication token")
+
+    post = db.query(ShareboxPostModel).filter(ShareboxPostModel.id == post_id).first()
+    if post is None:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    db_comment = ShareboxCommentModel(content=content, nickname=nickname, post_id=post_id)
+    try:
+        db.add(db_comment)
+        db.commit()
+        db.refresh(db_comment)
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Database integrity error")
+
+    return RedirectResponse(url=f"/viewsharebox/{post_id}", status_code=303)
+
+@app.post("/comment/sharebox/delete/{comment_id}")
+async def delete_sharebox_comment(request: Request, comment_id: int, db: Session = Depends(get_db)):
+    access_token = request.cookies.get("access_token")
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    try:
+        payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_email = payload.get("sub")
+        user = db.query(UserModel).filter(UserModel.email == user_email).first()
+        
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        
+        comment = db.query(ShareboxCommentModel).filter(ShareboxCommentModel.id == comment_id).first()
+        
+        if not comment:
+            raise HTTPException(status_code=404, detail="Comment not found")
+        
+        if comment.nickname != user.nickname and not user.admin:
+            raise HTTPException(status_code=403, detail="Not authorized to delete this comment")
+        
+        db.delete(comment)
+        db.commit()
+        return {"message": "Comment deleted successfully"}
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+@app.get("/post/sharebox/edit/{post_id}")
+async def edit_sharebox_post(post_id: int, request: Request, db: Session = Depends(get_db)):
+    access_token = request.cookies.get("access_token")
+    user_info = None
+
+    if access_token:
+        try:
+            payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
+            user_info = {"nickname": payload.get("nickname"), "email": payload.get("sub"), "admin": payload.get("admin")}
+        except JWTError:
+            pass
+
+    post = db.query(ShareboxPostModel).filter(ShareboxPostModel.id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+
+    if not (user_info and (user_info["nickname"] == post.nickname or user_info["admin"] == 1)):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to edit this post")
+
+    return templates.TemplateResponse("edit_sharebox_post.html", {"request": request, "post": post})
+
+@app.post("/post/sharebox/edit/{post_id}")
+async def update_sharebox_post(
+    request: Request,
+    post_id: int,
+    title: str = Form(...),
+    content: str = Form(...),
+    file: UploadFile = File(None),  # File is optional
+    db: Session = Depends(get_db)
+):
+    access_token = request.cookies.get("access_token")
+    if not access_token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+
+    try:
+        payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
+        nickname = payload.get("nickname")
+        admin = payload.get("admin", 0)
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication token")
+
+    post = db.query(ShareboxPostModel).filter(ShareboxPostModel.id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+
+    if not (nickname == post.nickname or admin == 1):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to edit this post")
+
+    # Handle file upload if provided
+    if file and file.filename:
+        file_content = await file.read()
+        try:
+            # Upload file to Dropbox
+            response = dbx.files_upload(file_content, f'/s-{nickname}-{post.id}/{file.filename}', mode=dropbox.files.WriteMode("overwrite"))
+            file_url = response.path_display  # Update the file URL
+            # Create a shared link for the uploaded file
+            link_response = dbx.sharing_create_shared_link_with_settings(file_url)
+            shared_link = link_response.url
+            post.file_url = shared_link
+        except Exception as e:
+            raise HTTPException(status_code=500, detail="File upload failed: " + str(e))
+    
+    post.title = title
+    post.content = content
+    db.commit()
+
+    return RedirectResponse(url=f"/viewsharebox/{post_id}", status_code=status.HTTP_303_SEE_OTHER)
+
+@app.post("/post/sharebox/delete/{post_id}")
+def delete_sharebox_post(post_id: int, db: Session = Depends(get_db)):
+    db.query(ShareboxCommentModel).filter(ShareboxCommentModel.post_id == post_id).delete(synchronize_session=False)
+    post = db.query(ShareboxPostModel).filter(ShareboxPostModel.id == post_id).first()
+    if post is None:
+        raise HTTPException(status_code=404, detail="Post not found")
+    
+    db.delete(post)
+    db.commit()
+    
+    return RedirectResponse(url="/sharebox", status_code=303)
