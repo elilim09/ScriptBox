@@ -8,8 +8,8 @@ from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from typing import Optional, List
 from fastapi.templating import Jinja2Templates
-from models import Base, UserModel, QboardPostModel, QboardCommentModel, LikeModel  # 모델을 가져옵니다
-from schemas import UserCreateSchema, UserInDBSchema, QboardPostSchema, QboardCommentSchema, QboardPostDetailSchema
+from models import Base, UserModel, QboardPostModel, QboardCommentModel, LikeModel, ShareboxPostModel, ShareboxCommentModel, ShareboxLikeModel  # 모델을 가져옵니다
+from schemas import UserCreateSchema, UserInDBSchema, QboardPostSchema, QboardCommentSchema, QboardPostDetailSchema,ShareboxPostBaseSchema,ShareboxPostCreateSchema,ShareboxPostSchema,ShareboxCommentBaseSchema,ShareboxCommentCreateSchema,ShareboxCommentSchema,ShareboxPostDetailSchema
 from fastapi.responses import RedirectResponse
 from fastapi.responses import JSONResponse
 from fastapi import File, UploadFile
@@ -23,7 +23,7 @@ GOOGLE_API_KEY = "AIzaSyB6wTmPTcrjjnnC_tuotbLZo3dSEogXJ8k"
 genai.configure(api_key=GOOGLE_API_KEY)
 model = genai.GenerativeModel('gemini-pro')
 
-ACCESS_TOKEN = 'sl.B6n5FnDqe92aq-KS2BKo7Fw0LWVUjBXXrQ2HX70BdpiqQUHGV3qHA_UuVwi97k7XdT46p6fTVSzurc4thGFM4bP5YjCI5c_X8Yrs6W0tGXNa9hiAOHCsvVRi_4m5J2aAvIeQ_HdeWUm-OsI'
+ACCESS_TOKEN = 'sl.B7AL6hAC_6oNtcp4bDN64PJCUxLAvoLZxU-oeU8Xyel3rnGS4LhUr6WLOaAUwrIJoQgjq8q-w3gIYKQypMBNKkMUM3pGXamth2WfRp8cuMv1JlfZ9yLe5OEQy1arcihpxcwVJRq9ykpCGxA'
 dbx = dropbox.Dropbox(ACCESS_TOKEN)
 
 # 데이터베이스 설정
@@ -966,3 +966,82 @@ def delete_sharebox_post(post_id: int, db: Session = Depends(get_db)):
     db.commit()
     
     return RedirectResponse(url="/sharebox", status_code=303)
+
+@app.get("/sharebox")
+async def view_sharebox(request: Request, db: Session = Depends(get_db)):
+    """
+    Sharebox 게시물 목록 조회.
+    """
+    posts = db.query(ShareboxPostModel).order_by(ShareboxPostModel.created_at.desc()).all()
+    return templates.TemplateResponse("sharebox.html", {"request": request, "posts": posts})
+
+@app.get("/viewsharebox/{post_id}")
+async def view_sharebox_post(post_id: int, request: Request, db: Session = Depends(get_db)):
+    """
+    특정 Sharebox 게시물 조회.
+    """
+    # 로그인 상태 확인
+    access_token = request.cookies.get("access_token")
+    user_info = None
+    post_user_liked = False
+    is_admin = False
+
+    if access_token:
+        try:
+            payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
+            user_info = {"nickname": payload.get("nickname"), "email": payload.get("sub")}
+            user = db.query(UserModel).filter(UserModel.email == payload.get("sub")).first()
+            if user:
+                post_user_liked = db.query(ShareboxLikeModel).filter(ShareboxLikeModel.post_id == post_id, ShareboxLikeModel.user_id == user.id).first() is not None
+                is_admin = user.admin if user else False
+        except JWTError:
+            pass
+
+    # 게시물 조회
+    post = db.query(ShareboxPostModel).filter(ShareboxPostModel.id == post_id).first()
+    if post is None:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    # 댓글 조회
+    comments = db.query(ShareboxCommentModel).filter(ShareboxCommentModel.post_id == post_id).all()
+    
+    # 게시물의 좋아요 수 계산
+    like_count = db.query(func.count(ShareboxLikeModel.post_id)).filter(ShareboxLikeModel.post_id == post_id).scalar() or 0
+
+    return templates.TemplateResponse("view_sharebox.html", {
+        "request": request,
+        "post": post,
+        "comments": comments,
+        "user_info": user_info,
+        "like_count": like_count,
+        "post_user_liked": post_user_liked,
+        "is_admin": is_admin
+    })
+
+@app.get("/post/sharebox/edit/{post_id}")
+async def edit_sharebox_post(post_id: int, request: Request, db: Session = Depends(get_db)):
+    """
+    특정 Sharebox 게시물 수정 페이지 조회.
+    """
+    access_token = request.cookies.get("access_token")
+    user_info = None
+
+    if access_token:
+        try:
+            payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
+            user_info = {"nickname": payload.get("nickname"), "email": payload.get("sub"), "admin": payload.get("admin")}
+        except JWTError:
+            pass
+
+    post = db.query(ShareboxPostModel).filter(ShareboxPostModel.id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+
+    if not (user_info and (user_info["nickname"] == post.nickname or user_info["admin"] == 1)):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to edit this post")
+
+    return templates.TemplateResponse("edit_sharebox_post.html", {"request": request, "post": post})
+
+@app.get("/post/sharebox/create")
+async def view_sharebox(request: Request):
+    return templates.TemplateResponse("create_sharebox_post.html", {"request": request})
