@@ -230,15 +230,6 @@
             <div class="column">
                 <h2>인기 작품</h2>
                 <ul>
-                    <li>[Python] 인공지능 챗봇 만들기</li>
-                    <li>[JavaScript] 인터랙티브 웹 게임</li>
-                    <li>[Java] 안드로이드 앱 개발 튜토리얼</li>
-                </ul>
-                <a href="#" class="add-button">+ 내 작품 만들기</a>
-            </div>
-            <div class="column">
-                <h2>Q. Box</h2>
-                <ul>
                     {% for post, like_count in top_posts %}
                         <li>
                             <a href="/viewqbox/{{ post.id }}">{{ post.title }}</a>
@@ -247,7 +238,21 @@
                         </li>
                     {% endfor %}
                 </ul>
-                <a href="#" class="add-button">+ 질문 등록하기</a>
+                <a href="#" class="add-button">+ 내 작품 만들기</a>
+            </div>
+
+            <div class="column">
+                <h2>최신 게시글</h2>
+                <ul>
+                    {% for post in latest_posts %}
+                        <li>
+                            <a href="/viewqbox/{{ post.id }}">{{ post.title }}</a>
+                            <p>작성자: {{ post.nickname }}</p>
+                            <p>작성일: {{ post.created_at.strftime('%Y-%m-%d') }}</p>
+                        </li>
+                    {% endfor %}
+                </ul>
+                <a href="/qbox_create" class="add-button">+ 질문 등록하기</a>
             </div>
         </section>
     </main>

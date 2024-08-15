@@ -115,7 +115,16 @@ async def home(request: Request, db: Session = Depends(get_db)):
 
     top_posts = top_posts_query.all()
 
-    return templates.TemplateResponse("index.html", {"request": request, "user_info": user_info, "top_posts": top_posts})
+    # Query to get latest 3 posts
+    latest_posts_query = db.query(QboardPostModel).order_by(QboardPostModel.created_at.desc()).limit(3)
+    latest_posts = latest_posts_query.all()
+
+    return templates.TemplateResponse("index.html", {
+        "request": request,
+        "user_info": user_info,
+        "top_posts": top_posts,
+        "latest_posts": latest_posts
+    })
 
 
 @app.get("/login")
