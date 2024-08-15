@@ -4,135 +4,182 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Q.box : ScriptBox</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #7c4dff;
+            --secondary-color: #3a3f5c;
+            --background-color: #f5f7fa;
+            --text-color: #333;
+            --light-text-color: #666;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
+            font-family: 'Roboto', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
+            background-color: var(--background-color);
+            line-height: 1.6;
+            color: var(--text-color);
         }
-        .container {
-            width: 80%;
-            margin: auto;
-            overflow: hidden;
-            padding: 20px;
-        }
+
         header {
-            background: #333;
-            color: #fff;
-            padding-top: 30px;
-            min-height: 70px;
-            border-bottom: #007bff 3px solid;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 5%;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            width: 90%;
+            top: 0;
+            left: 0;
+            z-index: 1000;
         }
-        header a {
-            color: #fff;
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .logo img {
+            width: 100px;
+            margin-right: 10px;
+        }
+
+        nav ul {
+            display: flex;
+            flex-wrap: wrap;
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        nav ul li {
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+
+        nav a, nav button {
+            color: var(--text-color);
             text-decoration: none;
-            text-transform: uppercase;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
             font-size: 16px;
         }
-        header ul {
-            padding: 0;
-            margin: 0;
-            list-style: none;
-            overflow: hidden;
+
+        nav a:hover, nav button:hover {
+            color: var(--primary-color);
         }
-        header li {
-            float: left;
-            display: inline;
-            padding: 0 20px 0 20px;
+
+        .container {
+            margin-top: 120px;
+            padding: 40px 5%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
         }
-        header #branding {
-            float: left;
-        }
-        header #branding h1 {
-            margin: 0;
-        }
-        header nav {
-            float: right;
-            margin-top: 10px;
-        }
+
         .board {
-            background: #fff;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .post-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .post-list li {
+            background-color: #f9f9f9;
             padding: 15px;
-            margin-top: 20px;
             border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .post {
-            background: #f9f9f9;
-            padding: 10px;
             margin-bottom: 10px;
-            border-radius: 3px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
         }
-        .post h3 {
-            margin-top: 0;
+
+        .post-list li:hover {
+            background-color: #f1f1f1;
         }
+
+        .post-title {
+            font-size: 18px;
+            color: var(--primary-color);
+            text-decoration: none;
+            display: block;
+        }
+
         .post-meta {
-            font-size: 0.8em;
-            color: #666;
+            font-size: 14px;
+            color: var(--light-text-color);
+            margin-top: 5px;
         }
+
         .button {
             display: inline-block;
             padding: 10px 20px;
-            background: #007bff;
-            color: #fff;
+            background-color: var(--primary-color);
+            color: white;
             text-decoration: none;
-            border-radius: 5px;
-            margin-top: 10px;
-        }
-        .button:hover {
-            background: #0056b3;
-        }
-        .comment-section {
+            border-radius: 25px;
+            font-size: 16px;
+            text-align: center;
             margin-top: 20px;
-            padding-top: 10px;
-            border-top: 1px solid #ddd;
+            transition: background-color 0.3s ease;
         }
-        .comment {
-            background: #f1f1f1;
-            padding: 10px;
-            margin-top: 10px;
-            border-radius: 3px;
-        }
-        .comment h4 {
-            margin-top: 0;
-            font-size: 1em;
+
+        .button:hover {
+            background-color: #6200ea;
         }
     </style>
 </head>
 <body>
     <header>
-        <div class="container">
-            <div id="branding">
-                <h1><span class="highlight">Script</span>Box</h1>
-            </div>
-            <nav>
-                <ul>
-                    <li><a href="/index">홈</a></li>
-                    <li><a href="/qbox">게시판</a></li>
-                    {% if user_info %}
-                        <li><a href="/post/logout">로그아웃</a></li>
-                    {% else %}
-                        <li><a href="/login">로그인</a></li>
-                        <li><a href="/register">회원가입</a></li>
-                    {% endif %}
-                </ul>
-            </nav>
+        <div class="logo">
+            <img src="https://i.ibb.co/vBYZZwr/Script-Box.png" alt="ScriptBox 로고">
         </div>
+        <nav>
+            <ul>
+                <li><a href="/index">홈</a></li>
+                <li><a href="/qbox">게시판</a></li>
+                {% if user_info %}
+                    <li><a href="/post/logout">로그아웃</a></li>
+                    <li><a href="/mypage">내 정보</a></li>
+                    {% if user_info.admin == 1 %}
+                        <li><a href="/admin">관리자</a></li>
+                    {% endif %}
+                {% else %}
+                    <li><a href="/login">로그인</a></li>
+                    <li><a href="/register">회원가입</a></li>
+                {% endif %}
+            </ul>
+        </nav>
     </header>
 
     <div class="container">
-        <ul>
-            {% for post in posts %}
-                <li>
-                    <a href="{{ url_for('view_qbox', post_id=post.id) }}">{{ post.title }} (by {{ post.nickname }})</a>
-                </li>
-            {% endfor %}
-        </ul>
-        {% if user_info %}
-            <a href="/qbox_create" class="button">새 게시물 작성</a>
-        {% endif %}
+        <div class="board">
+            <ul class="post-list">
+                {% for post in posts %}
+                    <li>
+                        <a class="post-title" href="{{ url_for('view_qbox', post_id=post.id) }}">{{ post.title }}</a>
+                        <div class="post-meta">by {{ post.nickname }} on {{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                    </li>
+                {% endfor %}
+            </ul>
+            {% if user_info %}
+                <a href="/qbox_create" class="button">새 게시물 작성</a>
+            {% endif %}
+        </div>
     </div>
 </body>
 </html>

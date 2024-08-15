@@ -1,9 +1,114 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Post : ScriptBox</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #7c4dff;
+            --secondary-color: #3a3f5c;
+            --background-color: #f5f7fa;
+            --text-color: #333;
+            --light-text-color: #666;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            line-height: 1.6;
+            color: var(--text-color);
+        }
+
+        .edit-post-container {
+            max-width: 800px;
+            margin: 100px auto 40px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 28px;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        form div {
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+            color: var(--secondary-color);
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+
+        input[type="file"] {
+            margin-top: 10px;
+        }
+
+        button[type="submit"] {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #6200ea;
+        }
+
+        .cancel-button {
+            background-color: #ccc;
+            color: var(--text-color);
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            margin-top: 10px;
+            display: inline-block;
+            transition: background-color 0.3s ease;
+        }
+
+        .cancel-button:hover {
+            background-color: #aaa;
+        }
+
+        .current-file {
+            margin-top: 10px;
+        }
+
+        .current-file a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .current-file a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
     <div class="edit-post-container">
@@ -22,13 +127,12 @@
                 <label for="file">Upload file:</label>
                 <input type="file" id="file" name="file">
                 {% if post.file_url %}
-                    <p>Current file: <a href="{{ post.file_url }}" target="_blank">Download current file</a></p>
+                    <p class="current-file">Current file: <a href="{{ post.file_url }}" target="_blank">Download current file</a></p>
                 {% endif %}
             </div>
             <button type="submit">Update Post</button>
+            <a href="/viewqbox/{{ post.id }}" class="cancel-button">Cancel</a>
         </form>
-        
-        <a href="/viewqbox/{{ post.id }}">Cancel</a>
     </div>
 </body>
 </html>
